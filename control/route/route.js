@@ -1,8 +1,7 @@
-steal('can/route','can/control', function(){
+define(['can/route/route','can/control/control'], function( can ) {
 	
 	// ## control/route.js  
 	// _Controller route integration._
-	
 	can.Control.processors.route = function( el, event, selector, funcName, controller ) {
 		can.route( selector || "" )
 		var batchNum,
@@ -27,4 +26,5 @@ steal('can/route','can/control', function(){
 			can.route.unbind( 'change', check )
 		}
 	}
+	return can;
 })

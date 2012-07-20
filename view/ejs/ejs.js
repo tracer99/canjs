@@ -1,4 +1,4 @@
-steal('can/view', 'can/util/string','can/observe/compute').then(function( $ ) {
+define(['can/view/view', 'can/util/string/string','can/observe/compute/compute'], function( can ) {
 
 	// ## ejs.js
 	// `can.EJS`  
@@ -729,4 +729,5 @@ steal('can/view', 'can/util/string','can/observe/compute').then(function( $ ) {
 			});
 		}
 	});
+	return can;
 });

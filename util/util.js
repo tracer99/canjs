@@ -1,5 +1,7 @@
+define([""],function() {
 can = {};
 
+/** /
 if (window.STEALSTANDALONE){
 	steal('can/util/standalone')
 } else if (window.STEALDOJO){
@@ -13,7 +15,9 @@ if (window.STEALSTANDALONE){
 } else {
 	steal('can/util/jquery')
 }
+/**/
 
+});
 /**
  @function can.isDeferred
  @parent can.util

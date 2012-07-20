@@ -1,9 +1,9 @@
-steal(function () {
+define(["can/util/preamble"], function( can ) {
 	can.each = function (elements, callback, context) {
 		var i = 0,
 		    key;
 		if (elements) {
-			if (typeof elements.length == 'number' && elements.pop) {
+			if (typeof elements.length === 'number' && elements.pop) {
 				elements.attr && elements.attr('length');
 				for (var len = elements.length; i < len; i++) {
 					if (callback.call(context || elements[i], elements[i], i, elements) === false) {
@@ -19,5 +19,7 @@ steal(function () {
 			}
 		}
 		return elements;
-	}
+	};
+	
+	return can;
 });

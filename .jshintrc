@@ -29,7 +29,11 @@
 		"notStrictEqual",
 		"raises",
 		"start",
-		"stop"
+		"stop",
+
+		// AMD
+		"define",
+		"require"
 
 	],
 
@@ -42,7 +46,8 @@
 	"noarg": true,
 	"smarttabs": true,
 	"undef": true,
-	"boss": true
+	"boss": true,
+	"smarttabs": true
 
 
 }

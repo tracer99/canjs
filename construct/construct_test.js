@@ -1,4 +1,3 @@
-module("can/construct",{
 	setup : function(){
 		var Animal = this.Animal = can.Construct({
 	        count: 0,

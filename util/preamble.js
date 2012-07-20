@@ -1,6 +1,7 @@
-steal(function() {
-// # CanJS v#{VERSION}
-// (c) 2012 Bitovi  
-// MIT license  
-// [http://canjs.us/](http://canjs.us/)
+define(function() {
+	// # CanJS v#{VERSION}
+	// (c) 2012 Bitovi  
+	// MIT license  
+	// [http://canjs.us/](http://canjs.us/)
+	return (window.can = {});
 });

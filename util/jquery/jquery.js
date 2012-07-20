@@ -1,4 +1,4 @@
-steal('./jquery.1.7.1.js', "./../preamble.js", function( $ ) {
+define(['can/util/jquery/jquery.1.7.1', 'can/util/array/each'], function( j, can ) {
 
 	// jquery.js
 	// ---------
@@ -50,4 +50,5 @@ steal('./jquery.1.7.1.js', "./../preamble.js", function( $ ) {
 		});
 		oldClean(elems);
 	};
-}).then('can/util/array/each.js');
+	return can;
+});

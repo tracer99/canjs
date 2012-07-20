@@ -1,5 +1,5 @@
 //@steal-clean
-steal("can/util/string",function( $ ) {
+define(["can/util/string/string"], function( can ) {
 
 	// ## construct.js
 	// `can.Construct`  
@@ -74,7 +74,7 @@ steal("can/util/string",function( $ ) {
 		// `oldProps` - Where the old properties might be (used with `super`).  
 		// `addTo` - What we are adding to.
 		_inherit: function( newProps, oldProps, addTo ) {
-			can.extend(addTo || newProps, newProps || {})
+			can.extend(addTo || newProps, newProps || {});
 		},
 		// used for overwriting a single property.
 		// this should be used for patching other objects
@@ -98,7 +98,7 @@ steal("can/util/string",function( $ ) {
 		 * 
 		 *     Base = can.Construct({
 		 *       setup : function(base, fullName, staticProps, protoProps){
-		 * 	       this.base = base;
+		 *	       this.base = base;
 		 *         // call base functionality
 		 *         can.Construct.setup.apply(this, arguments)
 		 *       }
@@ -182,7 +182,7 @@ steal("can/util/string",function( $ ) {
 		 */
 		extend: function( fullName, klass, proto ) {
 			// Figure out what was passed and normalize it.
-			if ( typeof fullName != 'string' ) {
+			if ( typeof fullName !== 'string' ) {
 				proto = klass;
 				klass = fullName;
 				fullName = null;
@@ -196,7 +196,7 @@ steal("can/util/string",function( $ ) {
 
 			var _super_class = this,
 				_super = this.prototype,
-				name, shortName, namespace, prototype;
+				name, prototype;
 
 			// Instantiate a base class (but only create the instance,
 			// don't run the init constructor).
@@ -239,7 +239,7 @@ steal("can/util/string",function( $ ) {
 
 				//@steal-remove-start
 				if(current[shortName]){
-					steal.dev.warn("class.js There's already something called "+fullName)
+					steal.dev.warn("class.js There's already something called "+fullName);
 				}
 				//@steal-remove-end
 				
@@ -433,4 +433,5 @@ steal("can/util/string",function( $ ) {
 
 	});
 
+	return can;
 })

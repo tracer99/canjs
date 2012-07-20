@@ -1,4 +1,4 @@
-steal('can/util/string', function($){
+define(['can/util/string/string'], function( can ) {
 	
 	// ## deparam.js  
 	// `can.deparam`  
@@ -64,4 +64,5 @@ steal('can/util/string', function($){
 		}
 	});
 	
+	return can;
 })

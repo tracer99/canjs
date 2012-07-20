@@ -1,5 +1,4 @@
-// this file should not be stolen directly
-steal('can/observe', function() {
+define(['can/observe/observe'], function( can ) {
 	
 	// ## model.js  
 	// `can.Model`  
@@ -1163,5 +1162,7 @@ steal('can/observe', function() {
 			})
 		}
 	})
+
+	return can;
 	
-})
+});

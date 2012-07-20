@@ -1,6 +1,4 @@
-steal('can/construct', function( $ ) {
-	(function() {
-	
+define(['can/construct/construct'], function( can ) {
 
 	// ## control.js
 	// `can.Control`  
@@ -9,7 +7,7 @@ steal('can/construct', function( $ ) {
 	// Binds an element, returns a function that unbinds.
 	var bind = function( el, ev, callback ) {
 
-		can.bind.call( el, ev, callback )
+		can.bind.call( el, ev, callback );
 
 		return function() {
 			can.unbind.call(el, ev, callback);
@@ -24,7 +22,7 @@ steal('can/construct', function( $ ) {
 
 		// Binds an element, returns a function that unbinds.
 		delegate = function( el, selector, ev, callback ) {
-			can.delegate.call(el, selector, ev, callback)
+			can.delegate.call(el, selector, ev, callback);
 			return function() {
 				can.undelegate.call(el, selector, ev, callback);
 			};
@@ -35,9 +33,7 @@ steal('can/construct', function( $ ) {
 			return selector ?
 				delegate( el, can.trim( selector ), ev, callback ) : 
 				bind( el, ev, callback );
-		},
-		
-		basicProcessor;
+		};
 	
 	/**
 	 * @add can.Control
@@ -80,7 +76,7 @@ steal('can/construct', function( $ ) {
 		// Moves `this` to the first argument, wraps it with `jQuery` if it's an element
 		_shifter : function( context, name ) {
 
-			var method = typeof name == "string" ? context[name] : name;
+			var method = typeof name === "string" ? context[name] : name;
 
 			if ( ! isFunction( method )) {
 				method = context[ method ];
@@ -88,7 +84,7 @@ steal('can/construct', function( $ ) {
 			
 			return function() {
 				context.called = name;
-    			return method.apply(context, [this.nodeName ? can.$(this) : this].concat( slice.call(arguments, 0)));
+				return method.apply(context, [this.nodeName ? can.$(this) : this].concat( slice.call(arguments, 0)));
 			};
 		},
 
@@ -105,7 +101,7 @@ steal('can/construct', function( $ ) {
 			// if not the constructor
 			return (methodName !== 'constructor') &&
 				// and is a function or links to a function
-				( type == "function" || (type == "string" &&  isFunction(this.prototype[val] ) ) ) &&
+				( type === "function" || (type === "string" &&  isFunction(this.prototype[val] ) ) ) &&
 				// and is in special, a processor, or has a funny character
 			    !! ( special[methodName] || processors[methodName] || /[^\w]/.test(methodName) );
 		},
@@ -137,7 +133,7 @@ steal('can/construct', function( $ ) {
 			
 			// If we don't have options (a `control` instance), we'll run this 
 			// later.  
-      		paramReplacer.lastIndex = 0;
+			paramReplacer.lastIndex = 0;
 			if ( options || ! paramReplacer.test( methodName )) {
 				// If we have options, run sub to replace templates `{}` with a
 				// value from the options or the window
@@ -293,7 +289,7 @@ steal('can/construct', function( $ ) {
 				arr;
 
 			// Want the raw element here.
-			this.element = can.$(element)
+			this.element = can.$(element);
 
 			if ( pluginname && pluginname !== 'can_control') {
 				// Set element and `className` on element.
@@ -366,7 +362,7 @@ steal('can/construct', function( $ ) {
 			 * 
 			 *     HelloWorld = can.Control({
 			 *       init: function(){
-			 * 	       this.element.text( 'Hello World' );
+			 *		    this.element.text( 'Hello World' );
 			 *       }
 			 *     });
 			 *     
@@ -466,12 +462,12 @@ steal('can/construct', function( $ ) {
 		 * 
 		 *     TaskStriker = can.Control({
 		 *       "{task} completed": function(){
-		 * 	       this.update();
+		 *	       this.update();
 		 *       },
 		 *       update: function(){
 		 *         if ( this.options.task.completed ) {
-		 * 	         this.element.addClass( 'strike' );
-		 * 	       } else {
+		 *	         this.element.addClass( 'strike' );
+		 *	       } else {
 		 *           this.element.removeClass( 'strike' );
 		 *         }
 		 *       }
@@ -486,12 +482,12 @@ steal('can/construct', function( $ ) {
 		 * 
 		 *     TaskStriker = can.Control({
 		 *       "{task} completed": function(){
-		 * 	       this.update();
+		 *	       this.update();
 		 *       },
 		 *       update: function() {
 		 *         if ( this.options.task.completed ) {
-		 * 	         this.element.addClass( 'strike' );
-		 * 	       } else {
+		 *	         this.element.addClass( 'strike' );
+		 *	       } else {
 		 *           this.element.removeClass( 'strike' );
 		 *         }
 		 *       },
@@ -574,7 +570,7 @@ steal('can/construct', function( $ ) {
 				return bindings.length;
 			}
 
-			if ( typeof el == 'string' ) {
+			if ( typeof el === 'string' ) {
 				func = eventName;
 				eventName = selector;
 				selector = el;
@@ -587,7 +583,7 @@ steal('can/construct', function( $ ) {
 				selector = null;
 			}
 
-			if ( typeof func == 'string' ) {
+			if ( typeof func === 'string' ) {
 				func = can.Control._shifter(this,func);
 			}
 
@@ -602,7 +598,7 @@ steal('can/construct', function( $ ) {
 		 * be calling this unless in use with [can.Control::on].
 		 */
 		off : function(){
-			var el = this.element[0]
+			var el = this.element[0];
 			each(this._bindings || [], function( value ) {
 				value(el);
 			});
@@ -629,8 +625,8 @@ steal('can/construct', function( $ ) {
 		 * 
 		 *      Clickr = can.Control({
 		 *       "{window} click": function() {
-		 * 	       this.element.html( this.count ? 
-		 * 	                          this.count++ : this.count = 0 );
+		 *	       this.element.html( this.count ? 
+		 *	                          this.count++ : this.count = 0 );
 		 *       }  
 		 *     });
 		 *     
@@ -747,6 +743,5 @@ steal('can/construct', function( $ ) {
 		processors[v] = basicProcessor;
 	});
 
-	}());
-	
+	return can;
 });

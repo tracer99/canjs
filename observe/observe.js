@@ -1,5 +1,4 @@
-// 1.69
-steal('can/construct', function() {
+define(['can/construct/construct'], function( can ) {
 	// ## observe.js  
 	// `can.Observe`  
 	// _Provides the observable pattern for JavaScript Objects._  
@@ -1296,4 +1295,5 @@ steal('can/construct', function() {
 			can.each(this, can.proxy(cb, thisarg || this ));
 		}
 	});
+	return can;
 });

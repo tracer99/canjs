@@ -362,8 +362,14 @@ test("Array accessor methods", 11, function() {
 	});
 });
 
-test("instantiating can.Observe.List of correct type", function() {
+test("instantiating can.Observe.List of correct type and proper can.Observe conversion", function() {
 	var Ob = can.Observe({
+		// Lets use a custom observe converter
+		observe : function(raw) {
+			raw.added = 'Added property';
+			return can.Observe.observe.call(this, raw);
+		}
+	}, {
 		getName : function() {
 			return this.attr('name');
 		}
@@ -377,10 +383,33 @@ test("instantiating can.Observe.List of correct type", function() {
 	ok(list[0] instanceof can.Observe, 'Initialized list item converted to can.Observe');
 	ok(list[0] instanceof Ob, 'Initialized list item converted to Ob');
 	equal(list[0].getName(), 'Tester', 'Converted to extended Observe instance, could call getName()');
+
 	list.push({
 		name : 'Another test'
 	});
+	equal(list.length, 2, 'New item added');
 	equal(list[1].getName(), 'Another test', 'Pushed item gets converted as well');
+
+	ok(list[1] instanceof Ob, 'Item converted to Ob');
+	equal(list[1].attr('added'), 'Added property', 'Ob.observe conversion got called and added property');
+
+	list.push({
+		name : 'New tester'
+	});
+
+	equal(list.length, 3, 'New item added');
+	ok(list[2] instanceof Ob, 'New item converted to Ob');
+	equal(list[2].attr('name'), 'New tester', 'Proeprty added');
+	equal(list[2].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
+
+	// TODO
+//	list.attr('1', {
+//		name : 'New tester'
+//	});
+//
+//	equal(list.length, 2, 'New item added');
+//	ok(list[1] instanceof Ob, 'New item converted to Ob');
+//	equal(list[1].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
 });
 
 
@@ -405,4 +434,30 @@ test("Some things should not be converted to Observes", function() {
 
 	ob.attr('window', window);
 	equal(ob.attr('window'), window, 'Window object should not be converted');
+});
+
+test("Standard conversion can.Observe.observe", function() {
+	var Ob = can.Observe({
+		getName : function() {
+			return this.attr('name') + '!';
+		}
+	});
+
+	var inst = Ob.observe({ name : 'Raw Object' });
+	ok(inst instanceof Ob, 'Converted to correct type');
+	equal(inst.getName(), 'Raw Object!', 'Could get property');
+	inst = Ob.observe(new can.Observe({ name : 'Observe' }));
+	ok(inst instanceof Ob, 'Converted to correct type');
+	equal(inst.getName(), 'Observe!', 'Could get property');
+
+	try {
+		inst = Ob.observe(window);
+		fail('Trying to convert the window object should throw exception');
+	} catch(e) {
+		equal(e, "can.Observe: Can't convert raw data", "Got correct error message");
+	}
+});
+
+test("List conversion can.Observe.List.observe", function() {
+	// TODO
 });

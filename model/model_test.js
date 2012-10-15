@@ -855,7 +855,5 @@ test("destroying a model impact the right list", function() {
 	list2[0].destroy();
 	equal( list1.length, 2, "After destroying list2[0] Person.List has length of 2")
 	equal( list2.length, 1, "After destroying list2[0] Organisation.List has length of 1")
-	console.log( list1 )
-	console.log( list2 )
 
 });

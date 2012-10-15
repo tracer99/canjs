@@ -10,16 +10,16 @@ steal('can/util','can/observe', function( can ) {
 	 * @add can.Model
 	 */
 	var	pipe = function( def, model, func ) {
-		var d = new can.Deferred();
-		def.then(function(){
-			var args = can.makeArray( arguments );
-			args[0] = model[func](args[0]);
-			d.resolveWith(d, args);
-		},function(){
-			d.rejectWith(this, arguments);
-		});
-		return d;
-	},
+			var d = new can.Deferred();
+			def.then(function(){
+				var args = can.makeArray( arguments );
+				args[0] = model[func](args[0]);
+				d.resolveWith(d, args);
+			},function(){
+				d.rejectWith(this, arguments);
+			});
+			return d;
+		},
 		modelNum = 0,
 		ignoreHookup = /change.observe\d+/,
 		getId = function( inst ) {
@@ -543,8 +543,25 @@ steal('can/util','can/observe', function( can ) {
 	
 	can.Model = can.Observe({
 		fullName: "can.Model",
-		setup : function(base){
-			can.Observe.apply(this, arguments);
+		setup : function(base) {
+			can.Observe.setup.apply(this, arguments);
+			var oldList = this.List;
+			this.List = oldList({
+				setup: function() {
+					oldList.prototype.setup.apply(this, arguments );
+					// Send destroy events.
+					var self = this;
+					this.bind('change', function(ev, how){
+						if(/\w+\.destroyed/.test(how)){
+							var index = self.indexOf(ev.target);
+							if (index != -1) {
+								self.splice(index, 1);
+							}
+						}
+					})
+				}
+			});
+
 			if(!can.Model){
 				return;
 			}
@@ -598,142 +615,7 @@ steal('can/util','can/observe', function( can ) {
 			return arguments[0];
 		},
 		/**
-		 * `can.Model.models(data, xhr)` is used to 
-		 * convert the raw response of a [can.Model.findAll] request 
-		 * into a [can.Model.List] of model instances.  
-		 * 
-		 * This method is rarely called directly. Instead the deferred returned
-		 * by findAll is piped into `models`.  This creates a new deferred that
-		 * resolves to a [can.Model.List] of instances instead of an array of
-		 * simple JS objects.
-		 * 
-		 * If your server is returning data in non-standard way,
-		 * overwriting `can.Model.models` is the best way to normalize it.
-		 * 
-		 * ## Quick Example
-		 * 
-		 * The following uses models to convert to a [can.Model.List] of model
-		 * instances.
-		 * 
-		 *     Task = can.Model({},{})
-		 *     var tasks = Task.models([
-		 *       {id: 1, name : "dishes", complete : false},
-		 *       {id: 2, name: "laundry", compelte: true}
-		 *     ])
-		 *     
-		 *     tasks.attr("0.complete", true)
-		 * 
-		 * ## Non-standard Services
-		 * 
-		 * `can.Model.models` expects data to be an array of name-value pair 
-		 * objects like:
-		 * 
-		 *     [{id: 1, name : "dishes"},{id:2, name: "laundry"}, ...]
-		 *     
-		 * It can also take an object with additional data about the array like:
-		 * 
-		 *     {
-		 *       count: 15000 //how many total items there might be
-		 *       data: [{id: 1, name : "justin"},{id:2, name: "brian"}, ...]
-		 *     }
-		 * 
-		 * In this case, models will return a [can.Model.List] of instances found in 
-		 * data, but with additional properties as expandos on the list:
-		 * 
-		 *     var tasks = Task.models({
-		 *       count : 1500,
-		 *       data : [{id: 1, name: 'dishes'}, ...]
-		 *     })
-		 *     tasks.attr("name") // -> 'dishes'
-		 *     tasks.count // -> 1500
-		 * 
-		 * ### Overwriting Models
-		 * 
-		 * If your service returns data like:
-		 * 
-		 *     {thingsToDo: [{name: "dishes", id: 5}]}
-		 * 
-		 * You will want to overwrite models to pass the base models what it expects like:
-		 * 
-		 *     Task = can.Model({
-		 *       models : function(data){
-		 *         return can.Model.models.call(this,data.thingsToDo);
-		 *       }
-		 *     },{})
-		 * 
-		 * `can.Model.models` passes each intstance's data to `can.Model.model` to
-		 * create the individual instances.
-		 * 
-		 * @param {Array|Objects} instancesRawData An array of raw name - value pairs objects like:
-		 * 
-		 *      [{id: 1, name : "dishes"},{id:2, name: "laundry"}, ...]
-		 * 
-		 * Or an Object with a data property and other expando properties like:
-		 * 
-		 *     {
-		 *       count: 15000 //how many total items there might be
-		 *       data: [{id: 1, name : "justin"},{id:2, name: "brian"}, ...]
-		 *     }
-		 * 
-		 * @return {Array} a [can.Model.List] of instances.  Each instance is created with
-		 * [can.Model.model].
-		 */
-		models: function( instancesRawData ) {
-
-			if ( ! instancesRawData ) {
-				return;
-			}
-      
-			if ( instancesRawData instanceof this.List ) {
-				return instancesRawData;
-			}
-
-			// Get the list type.
-			var self = this,
-				res = new( self.List || ML),
-				// Did we get an `array`?
-				arr = can.isArray(instancesRawData),
-				
-				// Did we get a model list?
-				ml = (instancesRawData instanceof ML),
-
-				// Get the raw `array` of objects.
-				raw = arr ?
-
-				// If an `array`, return the `array`.
-				instancesRawData :
-
-				// Otherwise if a model list.
-				(ml ?
-
-				// Get the raw objects from the list.
-				instancesRawData.serialize() :
-
-				// Get the object's data.
-				instancesRawData.data),
-				i = 0;
-
-			//!steal-remove-start
-			if ( ! raw.length ) {
-				steal.dev.warn("model.js models has no data.")
-			}
-			//!steal-remove-end
-
-			can.each(raw, function( rawPart ) {
-				res.push( self.model( rawPart ));
-			});
-
-			if ( ! arr ) { // Push other stuff onto `array`.
-				can.each(instancesRawData, function(val, prop){
-					if ( prop !== 'data' ) {
-						res[prop] = val;
-					}
-				})
-			}
-			return res;
-		},
-		/**
-		 * `can.Model.model(attributes)` is used to convert data from the server into
+		 * `can.Model.observe(attributes)` is used to convert data from the server into
 		 * a model instance.  It is rarely called directly.  Instead it is invoked as 
 		 * a result of [can.Model.findOne] or [can.Model.findAll].  
 		 * 
@@ -795,15 +677,16 @@ steal('can/util','can/observe', function( can ) {
 		 * 
 		 * @return {model} a model instance.
 		 */
-		model: function( attributes ) {
+		// model is basically just an alias for observer for backwards compatibility
+		observe : function( attributes ) {
 			if ( ! attributes ) {
 				return;
 			}
-			if ( attributes instanceof this ) {
+			if ( attributes instanceof can.Observe ) {
 				attributes = attributes.serialize();
 			}
 			var id = attributes[ this.id ],
-			    model = id && this.store[id] ? this.store[id].attr(attributes) : new this( attributes );
+				model = id && this.store[id] ? this.store[id].attr(attributes) : new this( attributes );
 			if(this._reqs){
 				this.store[attributes[this.id]] = model;
 			}
@@ -1166,21 +1049,93 @@ steal('can/util','can/observe', function( can ) {
    *
    *
    */
-	var ML = can.Model.List = can.Observe.List({
-		setup : function(){
-			can.Observe.List.prototype.setup.apply(this, arguments );
-			// Send destroy events.
-			var self = this;
-			this.bind('change', function(ev, how){
-				if(/\w+\.destroyed/.test(how)){
-					var index = self.indexOf(ev.target);
-					if (index != -1) {
-						self.splice(index, 1);
-					}
-				}
-			})
-		}
-	})
+
+	// TODO eventually deprecate
+	can.Model.model = can.Model.observe;
+	/**
+	 * `can.Model.models(data, xhr)` is used to
+	 * convert the raw response of a [can.Model.findAll] request
+	 * into a [can.Model.List] of model instances.
+	 *
+	 * This method is rarely called directly. Instead the deferred returned
+	 * by findAll is piped into `models`.  This creates a new deferred that
+	 * resolves to a [can.Model.List] of instances instead of an array of
+	 * simple JS objects.
+	 *
+	 * If your server is returning data in non-standard way,
+	 * overwriting `can.Model.models` is the best way to normalize it.
+	 *
+	 * ## Quick Example
+	 *
+	 * The following uses models to convert to a [can.Model.List] of model
+	 * instances.
+	 *
+	 *     Task = can.Model({},{})
+	 *     var tasks = Task.models([
+	 *       {id: 1, name : "dishes", complete : false},
+	 *       {id: 2, name: "laundry", compelte: true}
+	 *     ])
+	 *
+	 *     tasks.attr("0.complete", true)
+	 *
+	 * ## Non-standard Services
+	 *
+	 * `can.Model.models` expects data to be an array of name-value pair
+	 * objects like:
+	 *
+	 *     [{id: 1, name : "dishes"},{id:2, name: "laundry"}, ...]
+	 *
+	 * It can also take an object with additional data about the array like:
+	 *
+	 *     {
+	 *       count: 15000 //how many total items there might be
+	 *       data: [{id: 1, name : "justin"},{id:2, name: "brian"}, ...]
+	 *     }
+	 *
+	 * In this case, models will return a [can.Model.List] of instances found in
+	 * data, but with additional properties as expandos on the list:
+	 *
+	 *     var tasks = Task.models({
+	 *       count : 1500,
+	 *       data : [{id: 1, name: 'dishes'}, ...]
+	 *     })
+	 *     tasks.attr("name") // -> 'dishes'
+	 *     tasks.count // -> 1500
+	 *
+	 * ### Overwriting Models
+	 *
+	 * If your service returns data like:
+	 *
+	 *     {thingsToDo: [{name: "dishes", id: 5}]}
+	 *
+	 * You will want to overwrite models to pass the base models what it expects like:
+	 *
+	 *     Task = can.Model({
+	 *       models : function(data){
+	 *         return can.Model.models.call(this,data.thingsToDo);
+	 *       }
+	 *     },{})
+	 *
+	 * `can.Model.models` passes each intstance's data to `can.Model.model` to
+	 * create the individual instances.
+	 *
+	 * @param {Array|Objects} instancesRawData An array of raw name - value pairs objects like:
+	 *
+	 *      [{id: 1, name : "dishes"},{id:2, name: "laundry"}, ...]
+	 *
+	 * Or an Object with a data property and other expando properties like:
+	 *
+	 *     {
+	 *       count: 15000 //how many total items there might be
+	 *       data: [{id: 1, name : "justin"},{id:2, name: "brian"}, ...]
+	 *     }
+	 *
+	 * @return {Array} a [can.Model.List] of instances.  Each instance is created with
+	 * [can.Model.model].
+	 */
+	can.Model.models = function(data) {
+		return this.List.observe.apply(this.List, arguments);
+	}
 
 	return can.Model;
 })

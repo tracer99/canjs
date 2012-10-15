@@ -115,16 +115,28 @@ can.each([ can.Observe, can.Model ], function(clss){
 				return Boolean(val === "false" ? 0 : val);
 			},
 			"default": function( val, error, type ) {
-				var construct = can.getObject(type),
-					context = window,
-					realType;
-				// if type has a . we need to look it up
-				if ( type.indexOf(".") >= 0 ) {
+				var context = window,
+					construct, realType;
+
+				// Should be enough for checking if the type is an Observe construct
+				if(can.isFunction(type.observe) && type.canMakeObserve) {
+					context = type;
+					construct = type.observe;
+				} else if (type.indexOf(".") >= 0 ) {
+					// TODO this should be deprecated imho (daffl)
+
+					//!steal-remove-start
+					steal.dev.warn("can.Observe.attributes: Using string converter " + type + '  is deprecated.');
+					//!steal-remove-end
+
+					// if type has a . we need to look it up
 					// get everything before the last .
+					construct = can.getObject(type);
 					realType = type.substring(0, type.lastIndexOf("."));
 					// get the object before the last .
 					context = can.getObject(realType);
 				}
+
 				return typeof construct == "function" ? construct.call(context, val) : val;
 			}
 		},
@@ -226,18 +238,16 @@ can.Observe.prototype.setup = function(obj) {
  * @parent can.Observe.attributes
  */
 can.Observe.prototype.__convert = function(prop, value){
-	// check if there is a
-
 	var Class = this.constructor,
-		val, type, converter;
-		
+		type, converter;
+
 	if(Class.attributes){
 		// the type of the attribute
 		type = Class.attributes[prop];
 		converter = Class.convert[type] || Class.convert['default'];
 	}
-		
-	return value === null || !type ? 
+
+	return value === null || !type ?
 			// just use the value
 			value : 
 			// otherwise, pass to the converter

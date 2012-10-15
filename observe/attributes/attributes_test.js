@@ -167,6 +167,41 @@ test("defaults", function(){
 	equals(link.attr('rupees'), 255);
 });
 
+test("Convert can.Observe constructs passed as attributes", function() {
+	var Sword = can.Observe({
+		getPower : function() {
+			return this.attr('power') * 100;
+		}
+	});
 
+	var Level = can.Observe({
+		getName : function() {
+			return 'Level: ' + this.attr('name');
+		}
+	});
+
+	var Zelda = can.Observe({
+		attributes : {
+			sword : Sword,
+			levelsCompleted : Level.List
+		}
+	},{});
+
+	var link = new Zelda({
+		sword : {
+			name : 'Wooden Sword',
+			power : 0.2
+		},
+		levelsCompleted : [
+			{id: 1, name: 'Aquamentus'},
+			{id: 2, name: 'Dodongo'}
+		]
+	});
+
+	ok(link.attr('sword') instanceof Sword, 'Sword got converted');
+	equal(link.attr('sword').getPower(), 20, 'Got sword power!');
+	ok(link.attr('levelsCompleted') instanceof Level.List, 'Got a level list');
+	equal(link.attr('levelsCompleted.0').getName(), 'Level: Aquamentus', 'Entry got converted as well');
+});
 
 })();

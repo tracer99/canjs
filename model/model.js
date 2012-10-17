@@ -1134,6 +1134,11 @@ steal('can/util','can/observe', function( can ) {
 	 * [can.Model.model].
 	 */
 	can.Model.models = function(data) {
+		// If it hasn't been done already we have to tell our List what
+		// it should convert to
+		if(!this.List.Observe) {
+			this.List.Observe = this;
+		}
 		return this.List.observe.apply(this.List, arguments);
 	}
 

@@ -1379,9 +1379,10 @@ steal('can/util','can/construct', function(can, Construct) {
 	});
 
 	Observe.List = list;
+	var oldsetup = Observe.setup;
 	Observe.setup = function(){
-		Construct.setup.apply(this, arguments);
-		this.List = Observe.List({ Observe : this }, {});
+		oldsetup.apply(this, arguments);
+		this.List = list({ Observe : this }, {});
 	}
 	return Observe;
 });

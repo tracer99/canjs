@@ -403,13 +403,14 @@ test("instantiating can.Observe.List of correct type and proper can.Observe conv
 	equal(list[2].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
 
 	// TODO
-//	list.attr('1', {
-//		name : 'New tester'
-//	});
-//
-//	equal(list.length, 2, 'New item added');
-//	ok(list[1] instanceof Ob, 'New item converted to Ob');
-//	equal(list[1].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
+	list.attr(list.length, {
+		name : 'New tester'
+	});
+
+	equal(list.length, 4, 'New item added using .attr');
+	ok(list[list.length - 1] instanceof Ob, 'New item converted to Ob');
+	console.log(list[list.length - 1], '!!!!');
+	equal(list[list.length - 1].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
 });
 
 

@@ -402,15 +402,15 @@ test("instantiating can.Observe.List of correct type and proper can.Observe conv
 	equal(list[2].attr('name'), 'New tester', 'Proeprty added');
 	equal(list[2].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
 
-	// TODO
-	list.attr(list.length, {
-		name : 'New tester'
-	});
-
-	equal(list.length, 4, 'New item added using .attr');
-	ok(list[list.length - 1] instanceof Ob, 'New item converted to Ob');
-	console.log(list[list.length - 1], '!!!!');
-	equal(list[list.length - 1].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
+	// TODO Should this be possible?
+	//	list.attr(list.length, {
+	//		name : 'New tester'
+	//	});
+	//
+	//	equal(list.length, 4, 'New item added using .attr');
+	//	ok(list[list.length - 1] instanceof Ob, 'New item converted to Ob');
+	//	console.log(list[list.length - 1], '!!!!');
+//	equal(list[list.length - 1].attr('added'), 'Added property', 'Ob.observe conversion got called again added property');
 });
 
 
@@ -452,7 +452,7 @@ test("Standard conversion can.Observe.observe", function() {
 	equal(inst.getName(), 'Observe!', 'Could get property');
 
 	try {
-		inst = Ob.observe(window);
+		Ob.observe(window);
 		fail('Trying to convert the window object should throw exception');
 	} catch(e) {
 		equal(e, "can.Observe: Can't convert raw data", "Got correct error message");
@@ -460,5 +460,17 @@ test("Standard conversion can.Observe.observe", function() {
 });
 
 test("List conversion can.Observe.List.observe", function() {
-	// TODO
+	var arr = ['First', 'Second'],
+		simple = can.Observe.List.observe(arr);
+	ok(simple instanceof can.Observe.List, 'List converted');
+	deepEqual(simple.serialize(), arr, 'Got the same arrays');
+	equal(can.Observe.List.observe(simple), simple, 'Existing observe lists do not get converted');
+
+	var data = can.Observe.List.observe({
+		test : 'Attribute copied over',
+		data : arr
+	});
+	equal(data.length, 2, 'Used data attribute');
+	deepEqual(data.serialize(), arr, 'Got the same arrays');
+	equal(data.attr('test'), 'Attribute copied over', 'Other attribute copied over');
 });

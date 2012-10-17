@@ -156,9 +156,14 @@ steal('can/util','can/construct', function(can, Construct) {
 		id: "id",
         canMakeObserve : canMakeObserve,
 		observe : function(raw) {
-			if(canMakeObserve(raw)) {
+			if(raw instanceof this) {
+				return raw;l
+			}
+
+			if(this.canMakeObserve(raw)) {
 				return new this(raw instanceof can.Observe ? raw.serialize() : raw);
 			}
+
 			throw "can.Observe: Can't convert raw data";
 		}
 	},
@@ -834,9 +839,13 @@ steal('can/util','can/construct', function(can, Construct) {
 	var splice = [].splice,
 	list = Observe({
 		observe : function( instancesRawData ) {
-			console.log(this.fullName);
 			if ( ! instancesRawData ) {
 				return;
+			}
+
+			if(instancesRawData instanceof can.Observe.List) {
+				// Don't need to convert that
+				return instancesRawData;
 			}
 
 			// Get the list type.
@@ -844,10 +853,7 @@ steal('can/util','can/construct', function(can, Construct) {
 			// Did we get an `array`?
 				arr = can.isArray(instancesRawData),
 			// Get the raw `array` of objects.
-				raw = arr ? instancesRawData :
-					(instancesRawData instanceof can.Observe.List ?
-						instancesRawData.serialize() :
-						instancesRawData.data);
+				raw = arr ? instancesRawData : instancesRawData.data;
 
 			//!steal-remove-start
 			if ( ! raw.length ) {

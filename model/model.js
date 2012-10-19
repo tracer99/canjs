@@ -542,10 +542,13 @@ steal('can/util','can/observe', function( can ) {
 	
 	
 	can.Model = can.Observe({
+		id: "id",
 		fullName: "can.Model",
 		setup : function(base) {
 			can.Observe.setup.apply(this, arguments);
 			var oldList = this.List;
+			// Create a new List construct extending the original list
+			// that binds to destroyed events for automatic removal
 			this.List = oldList({
 				setup: function() {
 					oldList.prototype.setup.apply(this, arguments );
@@ -1050,7 +1053,6 @@ steal('can/util','can/observe', function( can ) {
    *
    */
 
-	// TODO eventually deprecate
 	can.Model.model = can.Model.observe;
 	/**
 	 * `can.Model.models(data, xhr)` is used to
@@ -1134,8 +1136,8 @@ steal('can/util','can/observe', function( can ) {
 	 * [can.Model.model].
 	 */
 	can.Model.models = function(data) {
-		// If it hasn't been done already we have to tell our List what
-		// it should convert to
+		// If it hasn't been done already we have to tell our List
+		// to what kind of Observe it should convert raw data to
 		if(!this.List.Observe) {
 			this.List.Observe = this;
 		}

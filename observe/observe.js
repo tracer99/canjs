@@ -33,6 +33,7 @@ steal('can/util','can/construct', function(can, Construct) {
 				// Make sure it is not listening to this already
 				unhookup([val], parent._cid);
 			} else if ( can.isArray(val) ) {
+				// Use can.Observe.observe or a derivate to convert the data
 				val = List.observe(val);
 			} else {
 				val = Ob.observe(val);
@@ -143,15 +144,27 @@ steal('can/util','can/construct', function(can, Construct) {
 	/**
 	 * @add can.Observe
 	 */
-	var Observe = can.Observe = Construct( {
+	var Observe = can.Observe = Construct(
+	/**
+	 * @static
+	 */
+	{
 		// keep so it can be overwritten
 		bind : bind,
 		unbind: unbind,
-		id: "id",
         canMakeObserve : canMakeObserve,
+		/**
+		 * Converts the given raw data (usually a plain JavaScript object)
+		 * into an observe instance of this can.Construct type. Throws an error
+		 * if it can't be converted. Returns the original instance if it is already
+		 * an instance of this can.Construct.
+		 *
+		 * @param {Object|can.Observe} raw The raw data to convert.
+		 * @return {can.Observe} An instance of the current construct type
+		 */
 		observe : function(raw) {
 			if(raw instanceof this) {
-				return raw;l
+				return raw;
 			}
 
 			if(this.canMakeObserve(raw)) {
@@ -831,7 +844,18 @@ steal('can/util','can/construct', function(can, Construct) {
 	 * @param {Array} [items...] the array of items to create the list with
 	 */
 	var splice = [].splice,
-	list = Observe({
+	list = Observe(
+	/**
+	 * @static
+     */
+	{
+		/**
+		 * Convert a list of raw data into a can.Observe.List of the can.Construct type.
+		 *
+		 *
+		 * @param {Array|can.Observe.List} instancesRawData
+		 * @return {can.Observe.List}
+		 */
 		observe : function( instancesRawData ) {
 			if ( ! instancesRawData ) {
 				return;
@@ -848,12 +872,6 @@ steal('can/util','can/construct', function(can, Construct) {
 				arr = can.isArray(instancesRawData),
 			// Get the raw `array` of objects.
 				raw = arr ? instancesRawData : instancesRawData.data;
-
-			//!steal-remove-start
-			if ( ! raw.length ) {
-				steal.dev.warn("observe.js can.Observe.List.observe has no data.")
-			}
-			//!steal-remove-end
 
 			can.each(raw, function( rawPart ) {
 				res.push(rawPart);

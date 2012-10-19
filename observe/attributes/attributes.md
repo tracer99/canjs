@@ -82,21 +82,42 @@ updates the age in the page for the new birthdate of the contact.
 	
 ## Associations
 
-Attribute type values can also represent the name of a function. The most common case this is used is for associated data.
+It is also possible to convert raw data based on associations to another `can.Observe`.
+This can be done by passing the Observe that you would like to convert a given attribute to.
+If your attribute should contain a list, pass the `Observe.List` instance:
 
-For example, a `Deliverable` might have many tasks and an owner (which is a Person). The attributes property might look like:
+    var Sword = can.Observe({
+      getPower : function() {
+        return this.attr('power') * 100;
+      }
+    });
 
-	var Deliverable = new can.Observe({
-		attributes : {
-			tasks : "App.Models.Task.models"
-			owner: "App.Models.Person.model"
-		}
-	});
+    var Level = can.Observe({
+      getName : function() {
+        return 'Level: ' + this.attr('name');
+      }
+    });
 
-This points tasks and owner properties to use _Task_ and _Person_ to convert the raw data into an array of Tasks and a Person.
+    var Zelda = can.Observe({
+      attributes : {
+        sword : Sword,
+        levelsCompleted : Level.List
+      }
+    },{});
 
-Its important to note that the full names of the models themselves are _App.Models.Task_ and _App.Models.Person_. The `.model` 
-and `.models` parts are appended for the benefit of convert to identify the types as models.
+    var link = new Zelda({
+      sword : {
+        name : 'Wooden Sword',
+        power : 0.2
+      },
+      levelsCompleted : [
+        {id: 1, name: 'Aquamentus'},
+        {id: 2, name: 'Dodongo'}
+      ]
+    });
+
+    link.attr('sword').getPower() // -> 20
+    link.attr('levelsCompleted')[1].getName(); // -> Level: Dodongo
 
 ### Demo
 

@@ -23,7 +23,10 @@ steal('can/util','can/observe', function( can ) {
 		modelNum = 0,
 		ignoreHookup = /change.observe\d+/,
 		getId = function( inst ) {
-			return inst[inst.constructor.id];
+			// Instead of using attr, use __get for performance.
+			// Need to set reading
+			can.Observe.__reading && can.Observe.__reading(this, inst.constructor.id)
+			return inst.__get(inst.constructor.id);
 		},
 		// Ajax `options` generator function
 		ajax = function( ajaxOb, data, type, dataType, success, error ) {

@@ -303,4 +303,35 @@ test("attr does not blow away old observable when going from empty to having ite
 	equals(project.attr("members").length, 1, "list should have bob in it");
 });
 
+test("Nested Observes with converters are replaced instead of updated (#208)", function() {
+	var MyObserve = can.Observe({
+		attributes: {
+			nested: "nested"
+		},
+		convert: {
+			nested: function(data) {
+				return data instanceof MyObserve ? data : new MyObserve(data);
+			}
+		}
+	},{
+
+	});
+
+	var obs = new MyObserve({
+		nested: {
+			name: "foo",
+			count: 1
+		}
+	});
+	var nested = obs.attr("nested");
+	obs.attr({
+		nested: {
+			count: 2
+		}
+	});
+
+	equal(obs.attr("nested.name"), "foo", "Got name, existing observe merged in");
+	equal(obs.attr("nested.count"), 2, "Count updated");
+});
+
 })();

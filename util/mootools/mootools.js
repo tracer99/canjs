@@ -348,6 +348,7 @@ steal('can/util/can.js', 'mootools', 'can/util/event.js','can/util/fragment.js',
 
 	// Overwrite to handle IE not having an id.
 	// IE barfs if text node.
+/*
 	var idOf = Slick.uidOf;
 	Slick.uidOf = function(node){
 		// for some reason, in IE8, node will be the window but not equal it.
@@ -357,6 +358,6 @@ steal('can/util/can.js', 'mootools', 'can/util/event.js','can/util/fragment.js',
 			return Math.random();
 		}
 	}
-
+*/
 	return can;
 });

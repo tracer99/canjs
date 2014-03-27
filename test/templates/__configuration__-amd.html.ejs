@@ -2,7 +2,8 @@
 <html>
 <head>
 	<title><%= configuration.description %> Test Suite</title>
-	<link rel="stylesheet" type="text/css" href="<%= root %>/lib/qunit/qunit.css"/>
+	<link rel="stylesheet" type="text/css" href="../../bower_components/qunit/qunit/qunit.css"/>
+    <script type="text/javascript" src="../../lib/html5shiv.js"></script>
 </head>
 <body>
 <h1 id="qunit-header"><%= configuration.description %> Test Suite</h1>
@@ -14,28 +15,36 @@
 <ol id="qunit-tests"></ol>
 <div id="qunit-test-area"></div>
 
-<script type="text/javascript" src="<%= root %>/lib/require.js"></script>
-<script type="text/javascript" src="<%= root %>/lib/qunit/qunit.js"></script>
+<script type="text/javascript" src="../../bower_components/requirejs/require.js"></script>
+<script type="text/javascript" src="../../bower_components/qunit/qunit/qunit.js"></script>
 <script type="text/javascript">
-	require.config(<%= JSON.stringify({}) %>);
+    <%
+        var moduleName = function(file) { return file.substring(0, file.lastIndexOf('.')); }
+        var configName = configuration.description.split(' ')[0].toLowerCase();
+        var config = {
+            baseUrl: root,
+            paths : {
+              can: "dist/amd/can"
+             },
+            map : {
+                '*' : {
+                    "can/util/library" : "can/util/" + configName
+                }
+            },
+            shim: {
+                "test/pluginified/latest": ['can/util/fixture'].concat(modules)
+            }
+        };
 
-	<!--
-	require.config({
-		"map": {
-			"*": {
-				"can/util/util.js?": "can/util/dojo/dojo.js?"
-			}
-		},
-		"shim": {
-			"can/construct/construct_test": {
-				"deps": "can/construct",
-				"exports": null
-			}
-		}
+        config.paths[configName] = moduleName(configuration.library);
+    %>
+
+	QUnit.config.autostart = false;
+	require.config(<%- JSON.stringify(config) %>);
+
+	require(["test/pluginified/latest"], function() {
+		QUnit.start();
 	});
-	-->
-
-	require(["<%- modules.join('", "') %>"]);
 </script>
 </body>
 </html>

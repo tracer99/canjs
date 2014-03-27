@@ -1,10 +1,11 @@
 @constructor can.Model
 @parent canjs
 @download can/model
-@test can/model/qunit.html
+@test can/model/test.html
+@link ../docco/model.html docco
 
 @signature `can.Model([name,] staticProperties, instanceProperties)`
-Creates a can.Model class constructor. (See [can.Construct] for more details on this syntax.)
+Create a can.Model constructor. (See [can.Construct] for more details on this syntax.)
 @param {String} [name] If given, this will be the globally-available name of the constructor function.
 @param {Object} staticProperties The static properties of the class. See below for properties with
 special meanings to `can.Model`.
@@ -12,26 +13,26 @@ special meanings to `can.Model`.
 be functions.
 @return {Function} A can.Model constructor.
 
-@signature `new ModelConstructor([options])`
+@signature `new can.Model([options])`
 Creates a new instance of _ModelConstructor_.
 @param {Object} [options] Options to pass to `setup` or `init`.
 @return {can.Model} A new instance of _ModelConstructor_.
 
 @body
-Model adds service encapsulation to [can.Observe].  Model lets you:
+Model adds service encapsulation to [can.Map].  Model lets you:
 
  - Get and modify data from the server
  - Listen to changes by the server
  - Unifying service data into the same objects
  
-## Get and modify data fron the server
+## Get and modify data from the server
 
 can.Model makes connecting to a JSON REST service 
 really easy.  The following models `todos` by
 describing the services that can create, retrieve,
 update, and delete todos. 
 
-    Todo = can.Model({
+    Todo = can.Model.extend({
       findAll: 'GET /todos.json',
       findOne: 'GET /todos/{id}.json',
       create:  'POST /todos.json',
@@ -143,6 +144,6 @@ __Listening with can.Control__
 
 You should be using can.Control to listen to model changes like:
 
-    Todos = can.Control({
+    Todos = can.Control.extend({
       "{Todo} updated" : function(Todo, ev, todo) {...}
     })

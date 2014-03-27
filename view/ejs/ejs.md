@@ -1,8 +1,14 @@
 @constructor can.EJS
 @parent canjs
+@group can.EJS.tags Tags
 
-EJS provides __live__ ERB-style client-side templates. Use EJS 
-with [can.view] and for live templating use EJS with [can.Observe].
+@description EJS provides __live__ ERB-style client-side templates.
+
+@signature `new can.EJS(options)`
+
+Creates an EmbeddedJS template. Use EJS with [can.view] or [can.view.ejs].
+
+@body
 
 ## Basic Example
 
@@ -41,7 +47,7 @@ Next, create a teacher and use can.view to render the template:
     };
     
     document.getElementById('teacher')
-      .appendChild( can.view("teacherEjs", teacher) )
+      .appendChild( can.view("teacherEJS", teacher) )
 
 This results in HTML like:
 
@@ -62,8 +68,8 @@ This is nice, but what if we change properties of the teacher?
 
 ## Basic Live Binding Example
 
-EJS sets up live templating binding when a [can.Observe]'s properties are read 
-via [can.Observe::attr attr] within a magic tag.  To make this template
+EJS sets up live templating binding when a [can.Map]'s properties are read 
+via [can.Map::attr attr] within a magic tag.  To make this template
 respond to changes in the teacher data, first rewrite the template
 to use the attr method to read properties and `list( observeList, cb(item, i) )`
 to iterate through a list like:
@@ -85,12 +91,12 @@ to iterate through a list like:
 __Note:__ The end of this page discusses why using `list` is 
 helpful, but it does nothing fancy.
 
-Next, turn your teacher into a `new can.Observe(object)` and pass
+Next, turn your teacher into a `new can.Map(object)` and pass
 that to `can.view`:
 
-    var teacher = can.Observe({
+    var teacher = new can.Map({
       name : "Mr. Smith",
-      grade : "a"
+      grade : "a",
       students : [
         {name : "Suzy"},
         {name : "Payal"},
@@ -100,7 +106,7 @@ that to `can.view`:
     });
     
     document.getElementById('teacher')
-      .appendChild( can.view("teacherEjs", teacher) );
+      .appendChild( can.view("teacherEJS", teacher) );
       
 Finally, update some properties of teacher and slap your 
 head with disbelief ...
@@ -125,35 +131,7 @@ are editable, so experiment!
 
 EJS uses 5 types of tags:
  
-__`<% CODE %>`__ - Runs JS Code.
 
-This type of magic tag does not modify the template but is used for JS control statements like for-loops, if/else, switch, etc.  An example:
-
-    <% if( items.attr('length') === 0 ) { %>
-        <tr><td>You have no items</td></tr>
-    <% } else { %>
-        <% list(items, function(){ %>
-          <tr> .... </tr>
-        <% }) %>
-    <% } %>
-
-Variable declarations and control blocks should always be defined in their own dedicated tags. Live binding leverages this hinting to ensure that logic is declared and executed at its intended scope.
-	
-	<!-- Each statement has its own dedicated EJS tag -->
-    <% var address = person.attr('address') %>
-    <% list(items, function() { %>
-        <tr> .... </tr>
-    <% }) %>
-    <span><%= address.attr('street') %><span>
-    
-    <!-- This won't work! -->
-    <%
-      var address = person.attr('address');
-      list(items, function() {
-    %>
-        <tr> .... </tr>
-    <% }) %>
-    <span><%= address.attr('street') %><span>
 
 __`<%= CODE %>`__ - Runs JS Code and writes the _escaped_ result into the result of the template.
 
@@ -184,8 +162,8 @@ to update an observable object, these functions are executed to return the new v
 
     // Suppose an observable "foo":
 
-    var foo = can.Observe({
-      count: '0'
+    var foo = new can.Map({
+      bar: 'baz'
     });
 
     // Suppose also, the above observable is passed to our view:
@@ -217,9 +195,9 @@ This is because it gets turned into:
 When the wrapping function is called again, `i` will 
 not be the index of the item, but instead be items.length.
 
-The [can.EJS.Helpers::view view]<code>(observeList,function(item,index,list){})</code> method in EJS should be used to iterate through observe lists:
+The [can.Map.List.prototype.each can.Map.List.each] method on all observable lists should be used to iterate through it:
 
-    <% list(items, function(item){ %>
+    <% items.each(function(item){ %>
       <li><%= item.attr('name') %></li>
     <% }) %>
     
@@ -258,3 +236,33 @@ __Note:__ The object passed into the view becomes "this" within the view templat
 
     var todos = Todo.findAll({}); //returns a can.Model.List
     can.view('//todo/views/init.ejs', todos)
+
+## Element Callbacks
+
+If a function is returned by the `<%= %>` or `<%== %>` magic tags within an element’s tag like:
+
+    <div <%= function( element ) { element.style.display = 'none' } %> >
+      Hello
+    </div>
+
+The function is called back with the HTMLElement as the first argument. This is useful to initialize functionality on an element within the view. This is so common that EJS supports ES5 arrow functions that get passed the NodeList wrapped element. Using jQuery, this lets you write the above callback as:
+
+    <div <%= (el) -> el.hide() %> >
+      Hello
+    </div>
+
+This technique is commonly used to add data, especially model instances, to an element like:
+
+    <% todos.each( function( todo ) { %>
+      <li <%= (el) -> el.data( 'todo', todo ) %>>
+        <%= todo.attr( 'name' ) %>
+      </li>
+    <% } ) %>
+
+jQuery’s `el.data( NAME, data )` adds data to an element. If your library does not support this, can provides it as `can.data( NodeList, NAME, data )`. Rewrite the above example as:
+
+    <% todos.each( function( todo ) { %>
+      <li <%= (el) -> can.data( el, 'todo', todo ) %>>
+        <%= todo.attr( 'name' ) %>
+      </li>
+    <% } ) %>

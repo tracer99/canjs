@@ -1,22 +1,38 @@
 <!--
 @page contributing How to Contribute
 @parent guides 4
+
+@body
 -->
 
-## Contributing
+Thank you for contributing to CanJS!  If you need any help setting up a CanJS development environment and fixing CanJS bugs, please reach out to us on IRC or email (contact@bitovi.com).  We will happily walk you throuygh setting up a the environment, creating a test, and submitting a pull request.
 
-When contributing, include tests with new features or bug fixes in a feature branch until you're ready to submit the code for consideration; then fork the repository, push to the fork, and issue a pull request.
+## Reporting Bugs
 
-Clone the repository and create a new feature branch.
+To report a bug, please visit [GitHub Issues](https://github.com/bitovi/canjs/issues).
 
-	$ git clone git@github.com:bitovi/canjs.git
-	$ git checkout -b html5-fix
+When filing a bug, it is helpful to include:
 
-Once your happy with your changes, push to the feature branch.
+- Small examples using tools like [JSFiddle](http://jsfiddle.com/). You can fork the following CanJS fiddles:
+  - [jQuery](http://jsfiddle.net/donejs/qYdwR/)
+  - [Zepto](http://jsfiddle.net/donejs/7Yaxk/)
+  - [Dojo](http://jsfiddle.net/donejs/9x96n/)
+  - [YUI](http://jsfiddle.net/donejs/w6m73/)
+  - [Mootools](http://jsfiddle.net/donejs/mnNJX/)
+- Breaking unit tests (optional)
+- Proposed fix solutions (optional)
 
-	$ git push origin html5-fix
+Search for previous tickets, if there is one add to that one rather than creating another. You can also post on the [Forums](https://forum.javascriptmvc.com/canjs) or talk to us in [IRC #canjs channel](http://webchat.freenode.net/?channels=canjs).
 
-Now that we have pushed all the changes to the repo, we need to submit a Pull Request to the main branch.  Navigate to [Pull Requests](https://github.com/bitovi/canjs/pulls) and click 'Pull Request' in the top navigation bar.  Fill in some details about your potential patch including a meaningful title. When finished, press "Send pull request". The core team will be notified about your submission and let you know of any problems or targeted release date.
+## Installing 
+
+1.) <a href="https://github.com/bitovi/canjs/fork" target="_blank">Fork Canjs on GitHub.</a>
+
+2.) Clone it with:
+	
+```
+git clone git@github.com:<your username>/canjs
+```
 
 ## Developing
 
@@ -28,16 +44,16 @@ Within each feature folder, for example `construct`, you’ll find a file for:
 * a demo of the feature - `construct.html`
 * an overview documentation page - `construct.md`
 * the feature’s tests - `construct_test.js`
-* a page to run those tests - `qunit.html`
+* a page to run those tests - `test.html`
 
 Any plugins for that feature will be folders within the feature’s folder. Ex: `proxy`, `super`.
 
 The `can/test` folder contains:
 
-* a `test.html` page which tests jQuery by default. Load e.g. `test.html?library=mootools` to test another library.
-* a test page that tests all libraries and plugins: `index.html`
-* a file that loads all feature tests: `can_test.js`
-* a `plugin_test.html` file that tests all plugins
+* an `index.html` page which runs all tests for each library in an iFrame.
+* a test page for each library e.g. `jquery.html` which loads dependencies using our package manager StealJS
+* a `build` folder which contains the same set of test files but for testing the build artifacts (like `can.jquery.js` etc.) you get from the download)
+* an `amd` folder which runs the same tests for the AMD modules using RequireJS
 
 The `can/util` folder contains the compatibility layer for each library.
 
@@ -49,28 +65,52 @@ To develop CanJS:
 4. Open can/test/index.html in every browser to test everything.
 5. Submit a pull request!
 
+## Contributing
+
+When contributing, include tests with new features or bug fixes in a feature branch until you're ready to submit the code for consideration; then push to the fork, and submit a pull request.
+
+Move into the directory of your cloned repository and create a new feature branch.
+
+```
+cd canjs
+git checkout -b html5-fix
+```
+
+Once your happy with your changes, push to the feature branch.
+
+```
+git push origin html5-fix
+```
+
+Now you'll need to submit a Pull Request. Navigate to [Pull Requests](https://github.com/bitovi/canjs/pulls) and click the 'New Pull Request' button. Fill in some details about your potential patch including a meaningful title. When finished, press "Send pull request". The core team will be notified about your submission and let you know of any problems or targeted release date.
+
 ## Documentation
 
-If your pull request affects the public API, make relevant changes to the documentation.  Documentation is found either inline or in markdown files in the respective directory.
+If your pull request affects the public API, make relevant changes to the documentation.
+Documentation is found either inline or in markdown files in the respective directory.
+In order to view your changes in documentation you will need to run [CanJS.com](http://canjs.com) locally and regenerate the docs.
+Note that you will need to modify the `can` folder in the `canjs.com` clone to point at your local clone of CanJS. This can be
+accomplished by replacing the `can` folder in your `canjs.com` clone with a symlink, ie `mv can can.submodule && ln -s <local path to canjs> can`.
 
-## Reporting Bugs
+```
+    git clone git@github.com:bitovi/canjs.com.git
+    cd canjs.com
+    git checkout gh-pages
+    git submodule update --init --recursive
+    npm install
+    grunt
+    ./js scripts/doc.js
+```
 
-To report a bug, please visit [GitHub Issues](https://github.com/bitovi/canjs/issues).  
-
-When filing a bug, its helpful to include:
-
-- Small examples using tools like [JSBin](http://jsbin.com/)
-- Breaking unit tests
-- Proposed fix solutions
-- Search for previous tickets, if there is one add to that one rather than creating another.
-
-You can also post on the [Forums](https://forum.javascriptmvc.com/canjs) or talk to us in [IRC #canjs channel](http://webchat.freenode.net/?channels=canjs).
+Once the documentation is finished rendering, all the HTML files will be located in the `docs` folder. Open the documentation file you made changes to and make sure everything rendered correctly.
 
 ## Running Tests Locally
 
-Its important that all tests pass before sending a pull request.  TravisCI will determine if your commits pass the tests, but while your developing you can run the QUnit tests locally.  
+Its important that all tests pass before sending a pull request. TravisCI will determine if your commits pass the tests, but while your developing you can run the QUnit tests locally. To run tests locally you need [NodeJS](http://nodejs.org/) installed and run
 
-Open `~/can/test/test.html` in a web browser to run the tests locally.  Each module has its own tests too, you can run them by opening the `qunit.html` in each folder.
+npm install
+
+Then open `~/can/test/test.html` in a web browser to run all tests for all libraries.  Each module has its own tests too, you can run them by opening the `test.html` in each folder.
 
 CanJS supports the following browsers:
 
@@ -80,10 +120,26 @@ CanJS supports the following browsers:
 - IE 7+
 - Opera Current-1
 
+## Making a build
+
+To make a build (standalone and AMD version) and run tests from the command line you will need [NodeJS](http://nodejs.com) and [Grunt](http://gruntjs.com) (`npm install grunt-cli -g`) installed. Then, in the CanJS repository folder run:
+
+    npm install
+
+Then you can run:
+
+    grunt build
+
+It puts the downloads in `can/dist`.
+
+You can also run the tests from the command line by executing:
+
+    grunt test
+
 ## Style Guide
 
 ### Linting
-Grunt provides a JSHint task to verify some basic, practical soundness of the codebase. The options are preset.
+Grunt provides a `quality` task to verify some basic, practical soundness of the codebase. The options are preset.
 
 ### Spacing
 Indentation with tabs, not spaces.
@@ -129,6 +185,7 @@ If the statement is a truthey or falsey, use implied operators.  Falseys are whe
 
 For example:
 
+```
 	// Bad
 	if(bar === false){ ... }
 
@@ -138,6 +195,7 @@ For example:
 	// Good
 	var foo = [];
 	if(!foo.length){ ... }
+```
 
 ###  Quotes
 
@@ -153,14 +211,18 @@ Strings that require inner quoting must use double outside and single inside.
 
 Single line comments go OVER the line they refer to:
 
+```
 	// We need an explicit "bar", because later in the code foo is checked.
 	var foo = "bar";
+```
 
 For long comments, use:
 
+```
 	/* myFn
 	 * Four score and seven—pause—minutes ago...
  	 */
+```
  	
 ## List of heroes
 

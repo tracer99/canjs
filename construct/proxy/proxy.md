@@ -1,16 +1,29 @@
 @page can.Construct.proxy
 @parent can.Construct.plugins
-@test can/construct/proxy/qunit.html
+@test can/construct/proxy/test.html
 @download http://donejs.com/can/dist/can.construct.proxy.js
 
-can.Construct.proxy is a plugin that helps you manage scope when creating
-callback functions by ensuring that `this` is set correctly and sensibly
-inside callbacks.
 
-@signature `proxy(callback, [...args])`
+@description Creates callback functions that have `this` set correctly.
+
+@signature `can.Construct.proxy(callback, [...args])`
+
+Creates a static callback function that has `this` set to the constructor
+function.
+
 @param {Function|String|Array.<Function|String>} callback the function or functions to proxy
 @param {...[*]} args parameters to curry into the proxied functions
 @return {Function} a function that calls `callback` with the same context as the current context
+
+@signature `construct.proxy(callback, [...args])`
+
+Creates a static callback function that has `this` set to an instance of the constructor
+function.
+
+@param {Function|String|Array.<Function|String>} callback the function or functions to proxy.
+@param {...[*]} args parameters to curry into the proxied functions
+@return {Function} a function that calls `callback` with the same context as the current context
+
 
 @body
 `can.Construct.prototype.proxy` takes a function and returns a new function that, when invoked,
@@ -19,7 +32,7 @@ calls the given function with the same `this` as `proxy` was called with.
 Here is a counter that increments its count after a second:
 
 @codestart
-can.Construct('DelayedCounter', {
+var DelayedCounter = can.Construct.extend({
     init: function() {
         this.count = 0;
         setTimeout(this.proxy(function() {
@@ -42,7 +55,7 @@ If you pass the name of a function on the `this` that `proxy` is called with,
 this technique:
 
 @codestart
-can.Construct('DelayedCounter', {
+var DelayedCounter = can.Construct.extend({
     init: function() {
         this.count = 0;
         setTimeout(this.proxy('increment'), 1000);
@@ -68,7 +81,7 @@ proxied function.
 Here's a delayed counter that increments by a given amount:
 
 @codestart
-can.Construct('IncrementalCounter', {
+var IncrementalCounter = can.Construct.extend({
     init: function(amount) {
         this.count = 0;
         setTimeout(this.proxy(function(amount) {
@@ -93,7 +106,7 @@ as a parameter to the next. This is useful to avoid having to curry callbacks.
 Here's a delayed counter that takes a callback to call after incrementing by a given amount:
 
 @codestart
-can.Construct('IncrementalCounter', {
+var IncrementalCounter = can.Construct.extend({
     init: function(amount, callback) {
         this.count = 0;
         setTimeout(this.proxy([function(amount) {
@@ -118,7 +131,7 @@ in static functions with the constructor as `this`.
 Here's a counter construct that keeps its count staticly and increments after one second:
 
 @codestart
-can.Construct('DelayedStaticCounter', {
+var DelayedStaticCounter = can.Construct.extend({
     setup: function() {
         this.count = 0;
     }

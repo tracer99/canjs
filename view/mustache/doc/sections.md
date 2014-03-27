@@ -1,106 +1,78 @@
 @page can.Mustache.Sections Sections
-@parent can.Mustache.pages 1
+@parent can.Mustache.pages 2
 
-Sections contain text blocks and evaluate whether to render it or not.  If
-the object evaluates to an array it will iterate over it and render the block
-for each item in the array.  There are four different types of sections.
+Sections (`[can.Mustache.helpers.section {{#key}}]` followed by `[can.Mustache.helpers.close {{/key}}]`) have multiple uses 
+depending on what type of object is passed to the section. In all cases, using a section will change 
+the current [can.Mustache.context context].
 
-## Falseys or Empty Arrays
+The most basic form of section will simply render a section of code if the key referenced is considered **truthy** (has a value):
 
-If the value returns a `false`, `undefined`, `null`, `""` or `[]` we consider
-that a *falsey* value.
+	Template:
+		Hello!
+		{{#person}}
+			{{name}}
+		{{/person}}
 
-If the value is falsey, the section will **NOT** render the block.
+	Data:
+		{
+			person: {
+				name: "Andy"
+			}
+		}
 
-	{ 
-		friends: false
-	}
+	Result:
+		Hello!
+		Andy
 
-	{{#friends}}
-		Never shown!
-	{{/friends}}
+Whenever the key doesn't exist or the value is **falsey**, the section won't be rendered:
 
+	Template:
+		Hello!
+		{{#person}}
+			{{name}}
+		{{/person}}
 
-## Arrays
+	Data:
+		{}
 
-If the value is a non-empty array, sections will iterate over the 
-array of items, rendering the items in the block.
+	Result:
+		Hello!
 
-For example, a list of friends will iterate
-over each of those items within a section.
+However, this scenario can be covered through the use of an inverse section 
+(`[can.Mustache.helpers.inverse {{^key}}]` followed by `[can.Mustache.helpers.close {{/key}}]`):
 
-	{ 
-		friends: [ 
-			{ name: "Austin" }, 
-			{ name: "Justin" } 
-		] 
-	}
+	Template:
+		Hello!
+		{{#person}}
+			{{name}}
+		{{/person}}
+		{{^person}}
+			No one is here.
+		{{/person}}
 
-	<ul>
-		{{#friends}}
-			<li>{{name}}</li>
-		{{/friends}}
-	</ul>
+	Data:
+		{}
 
-would render:
+	Result:
+		Hello!
+		No one is here.
 
-	<ul>
-		<li>Austin</li>
-		<li>Justin</li>
-	</ul>
+## Iteration
 
-Reminder: Sections will reset the current context to the value for which its iterating.
-See the [basics of contexts](#Basics) for more information.
+There is a special case for sections where the key references an array. In this case, the section iterates 
+the entire array, rendering the inner text for each item in the array. Arrays are considered **truthy** if 
+they aren't empty. The `{{.}}` tag will reference the current item within the array during iteration (which is 
+primarily used when the items in the array are primitives like strings and numbers).
 
-## Truthys
+	Template:
+		{{#people}}
+			{{.}} 
+		{{/people}}
 
-When the value is a non-falsey object but not a list, it is considered truthy and will be used 
-as the context for a single rendering of the block.
+	Data:
+		{
+			people: ["Andy", "Austin", "Justin"]
+		}
 
-	{
-		friends: { name: "Jon" }
-	}
-
-	{{#friends}}
-		Hi {{name}}
-	{{/friends}}
-
-would render:
-
-	Hi Jon!
-
-## Inverted
-
-Inverted sections match falsey values. An inverted section 
-syntax is similar to regular sections except it begins with a caret 
-rather than a pound. If the value referenced is falsey, the section will render.
-
-	{
-		friends: []
-	}
-
-	<ul>
-		{{#friends}}
-			</li>{{name}}</li>
-		{{/friends}}
-		{{^friends}}
-			<li>No friends.</li>
-		{{/friends}}
-	</ul>
-
-would render:
-
-	<ul>
-		<li>No friends.</li>
-	</ul>
-
-
-## Comments
-
-Comments, which do not appear in template output, begin a bang (!).
-
-	<h1>My friend is {{!Brian}}</h1>
-
-would render:
-
-	<h1>My friend is </h1>
+	Result:
+		Andy Austin Justin

@@ -364,6 +364,7 @@ steal('can/util/can.js', 'can/util/attr', 'mootools', 'can/event', 'can/util/fra
 		can.get = function (wrapped, index) {
 			return wrapped[index];
 		};
+		/* Breaks MooTools More Drag
 		// Overwrite to handle IE not having an id.
 		// IE barfs if text node.
 		var idOf = Slick.uidOf;
@@ -375,6 +376,7 @@ steal('can/util/can.js', 'can/util/attr', 'mootools', 'can/event', 'can/util/fra
 				return Math.random();
 			}
 		};
+		*/
 		Element.NativeEvents.hashchange = 2;
 
 		// Setup attributes events

@@ -444,11 +444,7 @@ steal('can/util', 'can/util/bind','./bubble.js', 'can/construct', 'can/util/batc
 				if (attr) {
 					// If property is a compute return the result, otherwise get the value directly
 					if (this.hasOwnProperty(attr) && this._computedBindings[attr]) {
-					try {
 						return this[attr]();
-					} catch (e) { 
-						debugger;
-					}
 					} else {
 						return this._data[attr];
 					}

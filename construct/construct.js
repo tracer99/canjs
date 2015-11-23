@@ -193,9 +193,11 @@ steal('can/util/string', function (can) {
 				args;
 			// Call `setup` if there is a `setup`
 			if (inst.setup) {
+				inst.__inSetup = true;
 				args = inst.setup.apply(inst, arguments);
+				delete inst.__inSetup;
 			}
-			// Call `init` if there is an `init`  
+			// Call `init` if there is an `init`
 			// If `setup` returned `args`, use those as the arguments
 			if (inst.init) {
 				inst.init.apply(inst, args || arguments);
@@ -463,6 +465,10 @@ steal('can/util/string', function (can) {
 			if(fullName) {
 				parts = fullName.split('.');
 				shortName = parts.pop();
+			} else if(klass && klass.shortName) {
+				shortName = klass.shortName;
+			} else if(this.shortName) {
+				shortName = this.shortName;
 			}
 			//!steal-remove-start
 			/* jshint ignore:start */
@@ -703,9 +709,9 @@ steal('can/util/string', function (can) {
 	 * @param {*} args the arguments passed to the constructor (or the items of the array returned from [can.Construct::setup])
 	 *
 	 * @body
-	 * If a prototype `init` method is provided, it is called when a new Construct is created,
+	 * If a prototype `init` method is provided, `init` is called when a new Construct is created---
 	 * after [can.Construct::setup]. The `init` method is where the bulk of your initialization code
-	 * should go, and a common thing to do in `init` is to save the arguments passed into the constructor.
+	 * should go. A common thing to do in `init` is save the arguments passed into the constructor.
 	 *
 	 * ## Examples
 	 *
@@ -724,7 +730,7 @@ steal('can/util/string', function (can) {
 	 * justin.last; // "Meyer"
 	 * ```
 	 *
-	 * Then we'll extend Person into Programmer and add a favorite language:
+	 * Then, we'll extend Person into Programmer, and add a favorite language:
 	 *
 	 * ```
 	 * var Programmer = Person.extend({
@@ -748,8 +754,8 @@ steal('can/util/string', function (can) {
 	 * ## Modified Arguments
 	 *
 	 * [can.Construct::setup] is able to modify the arguments passed to `init`.
-	 * If you aren't receiving the exact arguments as those passed to `new Construct(args)`,
-	 * check to make sure that they aren't being changed by `setup` somewhere along
+	 * If you aren't receiving the arguments you passed to `new Construct(args)`,
+	 * check that they aren't being changed by `setup` along
 	 * the inheritance chain.
 	 */
 	can.Construct.prototype.init = function () {};

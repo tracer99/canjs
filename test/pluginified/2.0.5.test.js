@@ -1,4 +1,4 @@
-(function(undefined) {
+(function(module, undefined) {
 
 // ## component/component_test.js
 var __m1 = (function () {
@@ -5720,7 +5720,7 @@ var __m41 = (function () {
 		Todos.splice(0, 2);
 		equal(li.length, 0, '0 items in list');
 	});
-	// https://github.com/bitovi/canjs/issues/153
+	// https://github.com/canjs/canjs/issues/153
 	test('Interpolated values when iterating through an Observe.List should still render when not surrounded by a DOM node', function () {
 		can.view.ejs('issue-153-no-dom', '<% can.each(todos, function(todo) { %><span><%= todo.attr("name") %></span><% }) %>');
 		can.view.ejs('issue-153-dom', '<% can.each(todos, function(todo) { %><%= todo.attr("name") %><% }) %>');
@@ -8911,7 +8911,7 @@ var __m48 = (function () {
 		equal(div.getElementsByTagName('li')[0].innerHTML, 'Todo #1', 'Pushing to the list works');
 	});
 
-	// https://github.com/bitovi/canjs/issues/228
+	// https://github.com/canjs/canjs/issues/228
 	test("Contexts within helpers not always resolved correctly", function () {
 		can.Mustache.registerHelper("bad_context", function (context, options) {
 			return "<span>" + this.text + "</span> should not be " + options.fn(context);
@@ -8933,7 +8933,7 @@ var __m48 = (function () {
 		equal(div.getElementsByTagName('span')[2].innerHTML, "In the inner context", 'Incorrect other_text in helper inner template');
 	});
 
-	// https://github.com/bitovi/canjs/issues/227
+	// https://github.com/canjs/canjs/issues/227
 	test("Contexts are not always passed to partials properly", function () {
 		can.view.registerView('inner', '{{#if other_first_level}}{{other_first_level}}{{else}}{{second_level}}{{/if}}')
 
@@ -8951,7 +8951,7 @@ var __m48 = (function () {
 		equal(div.getElementsByTagName('span')[1].innerHTML, "foo", 'Incorrect text in helper inner template');
 	});
 
-	// https://github.com/bitovi/canjs/issues/231
+	// https://github.com/canjs/canjs/issues/231
 	test("Functions and helpers should be passed the same context", function () {
 		can.Mustache.registerHelper("to_upper", function (fn, options) {
 			if (!fn.fn) {
@@ -8984,7 +8984,7 @@ var __m48 = (function () {
 		equal(div.getElementsByTagName('span')[1].innerHTML, data.next_level.other_text.toUpperCase(), 'Incorrect context passed to helper');
 	});
 
-	// https://github.com/bitovi/canjs/issues/153
+	// https://github.com/canjs/canjs/issues/153
 	test("Interpolated values when iterating through an Observe.List should still render when not surrounded by a DOM node", function () {
 		var renderer = can.view.mustache('{{ #todos }}{{ name }}{{ /todos }}'),
 			renderer2 = can.view.mustache('{{ #todos }}<span>{{ name }}</span>{{ /todos }}'),
@@ -13009,7 +13009,7 @@ var __m75 = (function () {
 	});
 	/*
 	 removed test, makes phantom js build fail. does not fail browser tests. Opened issue #408 to track, for milestone 1.2
-	 //TODO re-enable test and determine why it fails in phantom but not in real browser. https://github.com/bitovi/canjs/issues/408
+	 //TODO re-enable test and determine why it fails in phantom but not in real browser. https://github.com/canjs/canjs/issues/408
 	 */
 	test('can.fixture.store with can.Model', function () {
 		var store = can.fixture.store(100, function (i) {
@@ -13618,30 +13618,7 @@ var __m78 = (function () {
 	 ok(fooInfo.parent ===  top, "we pick the current if we have no leads");
 
 	 })*/
-	test('use highest default observe in stack unless you\'ve found your way in something that does exist', function () {
-		var bottom = new can.Map({
-			name: {
-				first: 'Justin'
-			}
-		});
-		var middle = new can.Map({
-			name: {
-				first: 'Brian'
-			}
-		});
-		var top = new can.Map({
-			title: 'top'
-		});
-		var cur = new can.view.Scope(bottom)
-			.add(middle)
-			.add(top);
-		var lastNameInfo = cur.read('name.last', {});
-		ok(lastNameInfo.rootObserve === middle, 'pick the default observe with the highest depth');
-		deepEqual(lastNameInfo.reads, [
-			'name',
-			'last'
-		], 'pick the default observe with the highest depth');
-	});
+
 	/*	test("use observe like objects, e.g. can.route, within scope properly", function() {
 	 var expected = "video"
 	 var cur = new can.view.Scope({}).add(can.route);
@@ -13740,7 +13717,8 @@ var __m78 = (function () {
 		topMap.attr('me.name.first', 'Payal');
 		baseMap.attr('me.name.first', 'Brian');
 	});
-	test('Scope read returnObserveMethods=true', function () {
+	// ok to comment out ... read is not documented
+	/*test('Scope read returnObserveMethods=true', function () {
 		var MapConstruct = can.Map.extend({
 			foo: function (arg) {
 				equal(this, data.map, 'correct this');
@@ -13758,7 +13736,7 @@ var __m78 = (function () {
 			isArgument: true
 		});
 		res.value(true);
-	});
+	});*/
 	test('rooted observable is able to update correctly', function () {
 		var baseMap = new can.Map({
 			name: {
@@ -14217,4 +14195,4 @@ var __m79 = (function () {
 })(undefined);
 
 
-})();
+})(QUnit.module);

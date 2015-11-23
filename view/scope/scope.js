@@ -12,41 +12,6 @@ steal(
 	'can/view',
 	'can/compute', function (can, makeComputeData) {
 
-		// ## Helpers
-
-		// Regex for escaped periods
-		var escapeReg = /(\\)?\./g,
-		// Regex for double escaped periods
-			escapeDotReg = /\\\./g,
-		// **getNames**
-		// Returns array of names by splitting provided string by periods and single escaped periods.
-		// ```getNames("a.b\.c.d\\.e") //-> ['a', 'b', 'c', 'd.e']```
-			getNames = function (attr) {
-				var names = [],
-					last = 0;
-				// Goes through attr string and places the characters found between the periods and single escaped periods into the
-				// `names` array.  Double escaped periods are ignored.
-				attr.replace(escapeReg, function (first, second, index) {
-					/* If period is double escaped then leave in place */
-					if (!second) {
-						names.push(
-							attr
-								.slice(last, index)
-								/* replaces double-escaped period with period */
-								.replace(escapeDotReg, '.')
-						);
-						last = index + first.length;
-					}
-				});
-				/* Adds last portion of attr to names array */
-				names.push(
-					attr
-						.slice(last)
-						/* replaces double-escaped period with period */
-						.replace(escapeDotReg, '.')
-				);
-				return names;
-			};
 
 		/**
 		 * @add can.view.Scope
@@ -60,29 +25,40 @@ steal(
 				// ## Scope.read
 				// Scope.read was moved to can.compute.read
 				// can.compute.read reads properties from a parent.  A much more complex version of getObject.
-				read: can.compute.read
+				read: can.compute.read,
+				Refs: can.Map.extend({shortName: "ReferenceMap"},{}),
+				Break: function(){},
+				refsScope: function(){
+					return new can.view.Scope( new this.Refs() );
+				}
 			},
 			/**
 			 * @prototype
 			 */
 			{
-				init: function (context, parent) {
+				init: function (context, parent, meta) {
 					this._context = context;
 					this._parent = parent;
 					this.__cache = {};
+					this._meta = meta || {};
 				},
-
+				get: can.__notObserve(function (key, options) {
+					
+					options = can.simpleExtend({
+						isArgument: true
+					}, options);
+					
+					var res = this.read(key, options);
+					return res.value;
+				}),
 				// ## Scope.prototype.attr
 				// Reads a value from the current context or parent contexts.
-				attr: can.__notObserve(function (key, value) {
+				attr: can.__notObserve(function (key, value, options) {
 					// Reads for whatever called before attr.  It's possible
 					// that this.read clears them.  We want to restore them.
-					var options = {
-							isArgument: true,
-							returnObserveMethods: true,
-							proxyMethods: false
-						},
-						res = this.read(key, options);
+					options = can.simpleExtend({
+						isArgument: true
+					}, options);
 
 					// Allow setting a value on the context
 					if(arguments.length === 2) {
@@ -97,8 +73,10 @@ steal(
 						}
 
 						can.compute.set(obj, key, value, options);
+					} else {
+						return this.get(key, options);
 					}
-					return res.value;
+					
 				}),
 
 				// ## Scope.prototype.add
@@ -107,9 +85,9 @@ steal(
 				// var scope = new can.view.Scope([{name:"Chris"}, {name: "Justin"}]).add({name: "Brian"});
 				// scope.attr("name") //-> "Brian"
 				// ```
-				add: function (context) {
+				add: function (context, meta) {
 					if (context !== this._context) {
-						return new this.constructor(context, this);
+						return new this.constructor(context, this, meta);
 					} else {
 						return this;
 					}
@@ -128,7 +106,70 @@ steal(
 					return this.computeData(key, options)
 						.compute;
 				},
+				getRefs: function(){
+					return this.getScope(function(scope){
+						return scope._context  instanceof Scope.Refs;
+					});
+				},
+				getViewModel: function(){
+					return this.getContext(function(scope){
+						return scope._meta.viewModel;
+					});
+				},
+				getContext: function(tester){
+					var res = this.getScope(tester);
+					return res && res._context;
+				},
+				getScope: function(tester){
+					var scope = this;
+					while (scope) {
+						if(tester(scope)) {
+							return scope;
+						}
+						scope = scope._parent;
+					}
+				},
+				getRoot: function(){
+					var cur = this,
+						child = this;
+						
+					while(cur._parent) {
+						child = cur;
+						cur = cur._parent;
+					}
 
+					if(cur._context instanceof Scope.Refs) {
+						cur = child;
+					}
+					return cur._context;
+				},
+				// this takes a scope and essentially copies its chain from
+				// right before the last Refs.  And it does not include the ref.
+				// this is a helper function to provide lexical semantics for refs.
+				// This will not be needed for leakScope: false.
+				cloneFromRef: function(){
+					var contexts = [];
+					var scope = this,
+						context,
+						parent;
+					while (scope) {
+						context = scope._context;
+						if(context instanceof Scope.Refs) {
+							parent = scope._parent;
+							break;
+						}
+						contexts.push(context);
+						scope = scope._parent;
+					}
+					if(parent) {
+						can.each(contexts, function(context){
+							parent = parent.add(context);
+						});
+						return parent;
+					} else {
+						return this;
+					}
+				},
 				// ## Scope.prototype.read
 				// Finds the first isntance of a key in the available scopes and returns the keys value along with the the observable the key
 				// was found in, readsData and the current scope.
@@ -143,63 +184,85 @@ steal(
 				 * @option {*} value the found value
 				 */
 				read: function (attr, options) {
+					// skip protected
+					if(this._meta.protected) {
+						return this._parent.read(attr, options);
+					}
+					var isInCurrentContext = attr.substr(0, 2) === './',
+						isInParentContext = attr.substr(0, 3) === "../",
+						isCurrentContext = attr === "." || attr === "this",
+						isParentContext = attr === "..",
+						isContextBased = isInCurrentContext ||
+							isInParentContext ||
+							isCurrentContext ||
+							isParentContext;
+							
+					// notContent items can be read, but are skipped if you are doing .. sorta stuff.
+					if(isContextBased && this._meta.notContext) {
+						return this._parent.read(attr, options);
+					}
+					
 					// check if we should only look within current scope
 					var stopLookup;
-					if(attr.substr(0, 2) === './') {
+					if(isInCurrentContext) {
 						// set flag to halt lookup from walking up scope
 						stopLookup = true;
 						// stop lookup from checking parent scopes
 						attr = attr.substr(2);
 					}
 					// check if we should be running this on a parent.
-					else if (attr.substr(0, 3) === "../") {
+					else if (isInParentContext) {
 						return this._parent.read(attr.substr(3), options);
-					} else if (attr === "..") {
-						return {
-							value: this._parent._context
-						};
-					} else if (attr === "." || attr === "this") {
+					}
+					else if ( isCurrentContext ) {
 						return {
 							value: this._context
 						};
 					}
+					else if ( isParentContext ) {
+						return {
+							value: this._parent._context
+						};
+					} else if(attr === "%root") {
+						return { value: this.getRoot() };
+					}
 
 					// Array of names from splitting attr string into names.  ```"a.b\.c.d\\.e" //-> ['a', 'b', 'c', 'd.e']```
-					var names = attr.indexOf('\\.') === -1 ?
-							// Reference doesn't contain escaped periods
-							attr.split('.')
-							// Reference contains escaped periods ```(`a.b\.c.foo` == `a["b.c"].foo)```
-							: getNames(attr),
+					var names = can.compute.read.reads(attr),
 					// The current context (a scope is just data and a parent scope).
 						context,
 					// The current scope.
-						scope = this,
-					// While we are looking for a value, we track the most likely place this value will be found.
-					// This is so if there is no me.name.first, we setup a listener on me.name.
-					// The most likely candidate is the one with the most "read matches" "lowest" in the
-					// context chain.
-					// By "read matches", we mean the most number of values along the key.
-					// By "lowest" in the context chain, we mean the closest to the current context.
-					// We track the starting position of the likely place with `defaultObserve`.
-						defaultObserve,
-					// Tracks how to read from the defaultObserve.
-						defaultReads = [],
-					// Tracks the highest found number of "read matches".
-						defaultPropertyDepth = -1,
-					// `scope.read` is designed to be called within a compute, but
-					// for performance reasons only listens to observables within one context.
-					// This is to say, if you have me.name in the current context, but me.name.first and
-					// we are looking for me.name.first, we don't setup bindings on me.name and me.name.first.
-					// To make this happen, we clear readings if they do not find a value.  But,
-					// if that path turns out to be the default read, we need to restore them.  This
-					// variable remembers those reads so they can be restored.
-						defaultComputeReadings,
-					// Tracks the default's scope.
-						defaultScope,
+						scope = names[0].key.charAt(0) === "*" ? this.getRefs() : this,
+
+					// If no value can be found, this is a list of of every observed
+					// object and property name to observe.
+						undefinedObserves = [],
 					// Tracks the first found observe.
 						currentObserve,
 					// Tracks the reads to get the value for a scope.
-						currentReads;
+						currentReads,
+
+						// Tracks the most likely observable to use as a setter.
+						setObserveDepth = -1,
+						currentSetReads,
+						currentSetObserve,
+					// Only search one reference scope for a variable.
+						searchedRefsScope = false,
+						refInstance,
+						readOptions = can.simpleExtend({
+							/* Store found observable, incase we want to set it as the rootObserve. */
+							foundObservable: function (observe, nameIndex) {
+								currentObserve = observe;
+								currentReads = names.slice(nameIndex);
+							},
+							earlyExit: function (parentValue, nameIndex) {
+								if (nameIndex > setObserveDepth) {
+									currentSetObserve = currentObserve;
+									currentSetReads = currentReads;
+									setObserveDepth = nameIndex;
+								}
+							}
+						}, options);
 
 					// Goes through each scope context provided until it finds the key (attr).  Once the key is found
 					// then it's value is returned along with an observe, the current scope and reads.
@@ -209,42 +272,41 @@ steal(
 
 					while (scope) {
 						context = scope._context;
-						if (context !== null &&
+						refInstance = context instanceof Scope.Refs;
+
+						
+						
+						if ( context !== null &&
 							// if its a primitive type, keep looking up the scope, since there won't be any properties
-							(typeof context === "object" || typeof context === "function") ) {
-							var data = can.compute.read(context, names, can.simpleExtend({
-								/* Store found observable, incase we want to set it as the rootObserve. */
-								foundObservable: function (observe, nameIndex) {
-									currentObserve = observe;
-									currentReads = names.slice(nameIndex);
-								},
-								// Called when we were unable to find a value.
-								earlyExit: function (parentValue, nameIndex) {
-									/* If this has more matching values */
-									if (nameIndex > defaultPropertyDepth) {
-										defaultObserve = currentObserve;
-										defaultReads = currentReads;
-										defaultPropertyDepth = nameIndex;
-										defaultScope = scope;
-										/* Clear and save readings so next attempt does not use these readings */
-										defaultComputeReadings = can.__clearReading();
-									}
-								},
-								// Execute anonymous functions found along the way
-								executeAnonymousFunctions: true
-							}, options));
+							(typeof context === "object" || typeof context === "function") &&
+							!( searchedRefsScope && refInstance ) &&
+							// If the scope is protected skip
+							! scope._meta.protected
+							) {
+
+							if(refInstance) {
+								searchedRefsScope = true;
+							}
+							var getObserves = can.__trapObserves();
+							
+							var data = can.compute.read(context, names, readOptions);
+							
+							var observes = getObserves();
 							// **Key was found**, return value and location data
 							if (data.value !== undefined) {
+								can.__observes(observes);
 								return {
 									scope: scope,
 									rootObserve: currentObserve,
 									value: data.value,
 									reads: currentReads
 								};
+							} else {
+								// save all old readings before we try the next scope
+								undefinedObserves.push.apply(undefinedObserves, observes);
 							}
 						}
-						// Prevent prior readings and then move up to the next scope.
-						can.__clearReading();
+
 						if(!stopLookup) {
 							// Move up to the next scope.
 							scope = scope._parent;
@@ -253,24 +315,16 @@ steal(
 						}
 					}
 
-					// **Key was not found**, return undefined for the value.  Unless an observable was
-					// found in the process of searching for the key, then return the most likely observable along with it's
-					// scope and reads.
+					// **Key was not found**, return undefined for the value.
+					// Make sure we listen to everything we checked for when the value becomes defined.
+					// Once it becomes defined, we won't have to listen to so many things.
+					can.__observes(undefinedObserves);
+					return {
+						setRoot: currentSetObserve,
+						reads: currentSetReads,
+						value: undefined
+					};
 
-					if (defaultObserve) {
-						can.__setReading(defaultComputeReadings);
-						return {
-							scope: defaultScope,
-							rootObserve: defaultObserve,
-							reads: defaultReads,
-							value: undefined
-						};
-					} else {
-						return {
-							names: names,
-							value: undefined
-						};
-					}
 				}
 			});
 

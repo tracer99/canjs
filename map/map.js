@@ -258,6 +258,9 @@ steal('can/util', 'can/util/bind','./bubble.js', './map_helpers.js','can/constru
 					if (this.hasOwnProperty(attr) && this._computedBindings[attr]) {
 						return this[attr]();
 */
+					var computedAttr = this._computedAttrs[attr];
+					if (computedAttr) {
+						return computedAttr.compute();
 					} else {
 						return this._data[attr];
 					}

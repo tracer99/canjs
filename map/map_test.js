@@ -7,7 +7,8 @@ steal("can/map", "can/compute", "can/test", "can/list", "steal-qunit", function(
 
 		var state = new can.Map({
 			category: 5,
-			productType: 4
+			productType: 4,
+			watch: 3
 		});
 
 		state.bind("change", function (ev, attr, how, val, old) {
@@ -326,4 +327,5 @@ steal("can/map", "can/compute", "can/test", "can/list", "steal-qunit", function(
 		source(1);
 		can.batch.stop();
 	});
+
 });

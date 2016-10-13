@@ -366,6 +366,9 @@ steal('can/util/can.js', 'can/util/attr', 'mootools', 'can/event', 'can/util/fra
 		};
 		// Overwrite to handle IE not having an id.
 		// IE barfs if text node.
+		/* We Don't need IE8 fixes.
+		 * This breaks Mootools-More Drag
+		 * -- Tucows
 		var idOf = Slick.uidOf;
 		Slick.uidOf = function (node) {
 			// for some reason, in IE8, node will be the window but not equal it.
@@ -375,6 +378,7 @@ steal('can/util/can.js', 'can/util/attr', 'mootools', 'can/event', 'can/util/fra
 				return Math.random();
 			}
 		};
+	   	*/
 		Element.NativeEvents.hashchange = 2;
 
 		// Setup attributes events

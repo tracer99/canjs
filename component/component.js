@@ -441,20 +441,7 @@ steal("can/util", "can/view/callbacks","can/view/elements.js","can/view/bindings
 					this.options.destroy.apply(this, arguments);
 				}
 			}
-<<<<<<< HEAD
-			// Call `can.Control.prototype.off` function on this instance to cleanup the bindings.
-			can.Control.prototype.off.apply(this, arguments);
-			this._bindings.readyComputes = {};
-		},
-		destroy: function() {
-			if(typeof this.options.destroy === 'function') {
-				this.options.destroy.apply(this, arguments);
-			}
-		}
-	});
-=======
 		});
->>>>>>> upstream/2.3-legacy
 
 	/**
 	 * @description Read and write a component element's viewModel.

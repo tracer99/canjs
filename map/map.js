@@ -243,21 +243,6 @@ steal('can/util', 'can/util/bind','./bubble.js', './map_helpers.js','can/constru
 					return this.__get( attr );
 				}
 			},
-<<<<<<< HEAD
-			// Reads a property directly if an `attr` is provided, otherwise
-			// returns the "real" data object itself.
-			__get: function (attr) {
-				if (attr) {
-					// If property is a compute return the result, otherwise get the value directly
-					if (this.hasOwnProperty(attr) && this._computedBindings[attr]) {
-						return this[attr]();
-					} else {
-						return this._data[attr];
-					}
-				// If not property is provided, return entire `_data` object
-				} else {
-					return this._data;
-=======
 
 			// ### __get
 			// Signals `can.compute` that an observable
@@ -265,7 +250,6 @@ steal('can/util', 'can/util/bind','./bubble.js', './map_helpers.js','can/constru
 			__get: function(attr){
 				if(!unobservable[attr] && !this._computedAttrs[attr]) {
 					can.__observe(this, attr);
->>>>>>> upstream/2.3-legacy
 				}
 				return this.___get( attr );
 			},
@@ -387,14 +371,9 @@ steal('can/util', 'can/util/bind','./bubble.js', './map_helpers.js','can/constru
 			// Directly saves the set value as a property on `_data`
 			// or sets the computed attribute.
 			___set: function (prop, val) {
-<<<<<<< HEAD
-				if (this.hasOwnProperty(prop) && this._computedBindings[prop] ) {
-					this[prop](val);
-=======
 				var computedAttr = this._computedAttrs[prop];
 				if ( computedAttr && computedAttr.compute ) {
 					computedAttr.compute(val);
->>>>>>> upstream/2.3-legacy
 				} else {
 					this._data[prop] = val;
 				}

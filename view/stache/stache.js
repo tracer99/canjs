@@ -15,6 +15,7 @@ steal(
 
 	// Make sure that we can also use our modules with Stache as a plugin
 	parser = parser || can.view.parser;
+	can.view.parser = parser;
 	viewCallbacks = viewCallbacks || can.view.callbacks;
 
 	var svgNamespace = "http://www.w3.org/2000/svg";
@@ -22,7 +23,8 @@ steal(
 		"svg": svgNamespace,
 		// this allows a partial to start with g.
 		"g": svgNamespace
-	};
+	},
+		textContentOnlyTag = {style: true, script: true};
 
 	function stache(template){
 		
@@ -43,7 +45,13 @@ steal(
 				// If text should be inserted and HTML escaped
 				text: false,
 				// which namespace we are in
-				namespaceStack: []
+				namespaceStack: [],
+				// for style and script tags
+				// we create a special TextSectionBuilder and add things to that
+				// when the element is done, we compile the text section and 
+				// add it as a callback to `section`.
+				textContentOnly: null
+				
 			},
 			// This function is a catch all for taking a section and figuring out
 			// how to create a "renderer" that handles the functionality for a 
@@ -54,7 +62,7 @@ steal(
 				
 				if(mode === ">") {
 					// Partials use liveBindingPartialRenderers
-					section.add(mustacheCore.makeLiveBindingPartialRenderer(stache, state));
+					section.add(mustacheCore.makeLiveBindingPartialRenderer(stache, copyState()));
 
 				} else if(mode === "/") {
 					
@@ -107,7 +115,8 @@ steal(
 					attr: state.attr && state.attr.name,
 					// <content> elements should be considered direclty nested
 					directlyNested: state.sectionElementStack.length ?
-						lastElement === "section" || lastElement === "custom": true
+						lastElement === "section" || lastElement === "custom": true,
+					textContentOnly: !!state.textContentOnly
 				};
 				return overwrites ? can.simpleExtend(cur, overwrites) : cur;
 			},
@@ -115,7 +124,7 @@ steal(
 				if( !node.attributes ) {
 					node.attributes = [];
 				}
-				node.attributes.push(callback);
+				node.attributes.unshift(callback);
 			};
 		
 		parser(template,{
@@ -152,11 +161,13 @@ steal(
 				} else {
 					section.push(state.node);
 					
-					state.sectionElementStack.push( isCustomTag ? 'custom': 'element' );
+					state.sectionElementStack.push( isCustomTag ? 'custom': tagName );
 					
 					// If it's a custom tag with content, we need a section renderer.
 					if( isCustomTag ) {
 						section.startSubSection();
+					} else if(textContentOnlyTag[tagName]) {
+						state.textContentOnly = new TextSectionBuilder();
 					}
 				}
 				
@@ -176,6 +187,10 @@ steal(
 				
 				if( isCustomTag ) {
 					renderer = section.endSubSectionAndReturnRenderer();
+				}
+				if(textContentOnlyTag[tagName]) {
+					section.last().add(state.textContentOnly.compile(copyState()));
+					state.textContentOnly = null;
 				}
 				
 				var oldNode = section.pop();
@@ -213,17 +228,18 @@ steal(
 					
 					state.node.attrs[state.attr.name] =
 						state.attr.section ? state.attr.section.compile(copyState()) : state.attr.value;
-					
+
 					var attrCallback = viewCallbacks.attr(attrName);
 					if(attrCallback) {
 						if( !state.node.attributes ) {
 							state.node.attributes = [];
 						}
-						state.node.attributes.push(function(scope, options){
+						state.node.attributes.push(function(scope, options, nodeList){
 							attrCallback(this,{
 								attributeName: attrName,
 								scope: scope,
-								options: options
+								options: options,
+								nodeList: nodeList
 							});
 						});
 					}
@@ -242,10 +258,9 @@ steal(
 				}
 			},
 			chars: function( text ) {
-				section.add(text);
+				(state.textContentOnly || section).add(text);
 			},
 			special: function( text ){
-				
 				
 				var firstAndText = mustacheCore.splitModeFromExpression(text, state),
 					mode = firstAndText.mode,
@@ -253,7 +268,15 @@ steal(
 				
 				
 				if(expression === "else") {
-					(state.attr && state.attr.section ? state.attr.section : section).inverse();
+					var inverseSection;
+					if(state.attr && state.attr.section) {
+						inverseSection = state.attr.section;
+					} else if(state.node && state.node.section ) {
+						inverseSection = state.node.section;
+					} else {
+						inverseSection = state.textContentOnly || section;
+					}
+					inverseSection.inverse();
 					return;
 				}
 				
@@ -273,7 +296,7 @@ steal(
 				}
 				// `{{}}` in an attribute like `class="{{}}"`
 				else if(state.attr) {
-					
+
 					if(!state.attr.section) {
 						state.attr.section = new TextSectionBuilder();
 						if(state.attr.value) {
@@ -281,6 +304,7 @@ steal(
 						}
 					}
 					makeRendererAndUpdateSection(state.attr.section, mode, expression );
+
 				}
 				// `{{}}` in a tag like `<div {{}}>`
 				else if(state.node) {
@@ -296,13 +320,11 @@ steal(
 						}
 						makeRendererAndUpdateSection(state.node.section, mode, expression );
 					} else {
-						throw mode+" is currently not supported within a tag.";
+						throw new Error(mode+" is currently not supported within a tag.");
 					}
-					
-					
-					
-				} else {
-					makeRendererAndUpdateSection(section, mode, expression );
+				}
+				else {
+					makeRendererAndUpdateSection( state.textContentOnly || section, mode, expression );
 				}
 			},
 			comment: function( text ) {

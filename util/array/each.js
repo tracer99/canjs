@@ -1,22 +1,15 @@
 /* jshint maxdepth:7*/
-steal('can/util/can.js', function (can) {
-	
-	// The following is from jQuery
-	var isArrayLike = function(obj){
-		// The `in` check is from jQuery’s fix for an iOS 8 64-bit JIT object length bug:
-		// https://github.com/jquery/jquery/pull/2185
-		var length = "length" in obj && obj.length;
-		return typeof arr !== "function" &&
-			( length === 0 || typeof length === "number" && length > 0 && ( length - 1 ) in obj );
-	};
-	
+steal('can/util/can.js', 'can/util/array/isArrayLike.js', function (can) {
+
+
+
 	can.each = function (elements, callback, context) {
 		var i = 0,
 			key,
 			len,
 			item;
 		if (elements) {
-			if ( isArrayLike(elements) ) {
+			if ( can.isArrayLike(elements) ) {
 				if(can.List && elements instanceof can.List ) {
 					for (len = elements.attr("length"); i < len; i++) {
 						item = elements.attr(i);
@@ -32,9 +25,9 @@ steal('can/util/can.js', function (can) {
 						}
 					}
 				}
-				
+
 			} else if (typeof elements === "object") {
-				
+
 				if (can.Map && elements instanceof can.Map || elements === can.route) {
 					var keys = can.Map.keys(elements);
 					for(i =0, len = keys.length; i < len; i++) {
@@ -46,12 +39,12 @@ steal('can/util/can.js', function (can) {
 					}
 				} else {
 					for (key in elements) {
-						if (elements.hasOwnProperty(key) && callback.call(context || elements[key], elements[key], key, elements) === false) {
+						if (Object.prototype.hasOwnProperty.call(elements, key) && callback.call(context || elements[key], elements[key], key, elements) === false) {
 							break;
 						}
 					}
 				}
-				
+
 			}
 		}
 		return elements;

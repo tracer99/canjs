@@ -66,6 +66,18 @@
 			"description": "High performance Mustache templates",
 			"type": "plugin"
 		},
+		"can/view/stache/mustache_core": {
+			"name": "can.stache.mustache.core",
+			"type": "plugin",
+			"hidden": true,
+			"hasTest": false
+		},
+		"can/view/href/href": {
+			"name": "can.view.href",
+			"type": "core",
+			"description": "Make flexible route links",
+			"isDefault": true
+		},
 		"can/control/control": {
 			"name": "can.Control",
 			"description": "Declarative event bindings",
@@ -253,6 +265,21 @@
 			"type": "plugin",
 			"hidden": true,
 			"hasTest": false
+		},
+		"can/util/vdom/build_fragment/build_fragment": {
+			"name": "can.util.vdom.buildFragment",
+			"type": "plugin",
+			"hidden": true
+		},
+		"can/util/vdom/document/document": {
+			"name": "can.util.vdom.document",
+			"type": "plugin",
+			"hidden": true
+		},
+		"can/view/import/import": {
+			"name": "can.view.import",
+			"type": "plugin",
+			"hidden": true
 		}
 	},
 	"types": {
@@ -266,7 +293,7 @@
 			"library": "node_modules/jquery/dist/jquery.js",
 			"steal": {
 				"paths": {
-					
+
 				}
 			}
 		},
